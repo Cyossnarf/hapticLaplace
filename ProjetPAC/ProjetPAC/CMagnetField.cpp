@@ -21,7 +21,7 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 	
 	double gap_sp = 0.015;
 	// create the first turn
-	cCreatePipe(this, height_sp, in_radius, out_radius);
+	cCreateCylinder(this, height_sp, in_radius);//cCreatePipe(this, height_sp, in_radius, out_radius);
 	setLocalPos(currentPos);
 
 	// set the appearance of the first turn
