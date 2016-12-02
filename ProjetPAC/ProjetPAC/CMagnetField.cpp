@@ -21,7 +21,7 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 	
 	double gap_sp = 0.015;
 	// create the first turn
-	cCreateCylinder(this, height_sp, in_radius);//cCreatePipe(this, height_sp, in_radius, out_radius);
+	cCreatePipe(this, height_sp, in_radius, out_radius);//cCreateCylinder(this, height_sp, in_radius);
 	setLocalPos(currentPos);
 
 	// set the appearance of the first turn
@@ -30,9 +30,9 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 
 	setTexture(turnTexture);
 	setUseTexture(true);
-	/*
+	
 	// create the rest of the turns	(18 en 2015)
-	for (int i = 0; i < 0; i++) {
+	for (int i = 0; i < 18; i++) {
 		currentPos.add(gap_sp * direction);
 		cMesh* mesh = new cMesh();
 		turns.push_back(mesh);
@@ -44,7 +44,7 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 		mesh->setUseTexture(true);
 		mesh->rotateAboutGlobalAxisDeg(cVector3d(0.0, 0.0, 1.0), 50 * cSinRad((i + 1) * C_PI / 18));
 	}
-	*/
+	
 	/*
 	cCreateCylinder(this,
 		height_sp,
@@ -63,7 +63,7 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 
 	// set the orientation of the field
 	rotateAround(cVector3d(0.0, 1.0, 0.0), -C_PI_DIV_2 * 0.8);
-	rotateAround(cVector3d(0.0, 0.0, 1.0), C_PI_DIV_2 / 8);
+	//rotateAround(cVector3d(0.0, 0.0, 1.0), C_PI_DIV_2 / 8);
 }
 
 chai3d::cMagnetField::~cMagnetField()

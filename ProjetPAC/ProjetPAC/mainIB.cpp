@@ -333,8 +333,8 @@ int main(int argc, char* argv[])
 	world->addChild(camera);
 
 	// position and orient the camera
-	camera->set(cVector3d(0.3, 0.00, 0.10),    // camera position (eye)
-		cVector3d(0.00, 0.00, 0.04),    // lookat position (target)
+	camera->set(cVector3d(0.6, 0.00, 0.10),//(0.3, 0.00, 0.10),    // camera position (eye)
+		cVector3d(0.00, 0.00, 0.10),//0.04),    // lookat position (target)
 		cVector3d(0.00, 0.00, 1.00));   // direction of the (up) vector
 
 										// set the near and far clipping planes of the camera
