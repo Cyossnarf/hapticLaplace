@@ -656,7 +656,7 @@ void keySelect(unsigned char key, int x, int y)
 	// option 4: select the current intensity of the turns
 	if (key == '4')
 	{
-		selection = "intensity";
+		//selection = "intensity";
 	}
 
 	// option +: increase the selected variable
@@ -820,7 +820,7 @@ void updateHaptics(void)
 		cVector3d sensedForce;
 
 		// rotate the turns according to the current intensity
-		magnetField->rotateAround(magnetField->getDirection(), (magnetField->getCurrentIntensity() > 0) ? 0.001 : ((magnetField->getCurrentIntensity() < 0) ? -0.001 : 0.0));
+		//magnetField->rotateAround(magnetField->getDirection(), (magnetField->getCurrentIntensity() > 0) ? 0.001 : ((magnetField->getCurrentIntensity() < 0) ? -0.001 : 0.0));
 
 		// stop the simulation clock
 		clock.stop();
