@@ -62,7 +62,7 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 	setTransparency(1.0);
 
 	// set the orientation of the field
-	rotateAround(cVector3d(0.0, 1.0, 0.0), -C_PI_DIV_2 * 0.8);
+	rotateAround(cVector3d(0.0, 1.0, 0.0), C_PI_DIV_2);// -C_PI_DIV_2*0.8);
 	//rotateAround(cVector3d(0.0, 0.0, 1.0), C_PI_DIV_2 / 8);
 }
 
