@@ -333,7 +333,7 @@ int main(int argc, char* argv[])
 	world->addChild(camera);
 
 	// position and orient the camera
-	camera->set(cVector3d(0.3, 0.00, 0.00),//(0.3, 0.00, 0.10),    // camera position (eye)
+	camera->set(cVector3d(0.4, 0.00, 0.00),//(0.3, 0.00, 0.10),    // camera position (eye)
 		cVector3d(0.00, 0.00, 0.00),//0.04),    // lookat position (target)
 		cVector3d(0.00, 0.00, 1.00));   // direction of the (up) vector
 
@@ -433,7 +433,7 @@ int main(int argc, char* argv[])
 	world->addChild(sphere);
 
 	// set position of the sphere
-	sphere->setLocalPos(-0.05, -0.23, 0.0);//(-0.05, -0.18, 0.0);
+	sphere->setLocalPos(0.00, -0.23, 0.0);//(-0.05, -0.18, 0.0);
 
 	// set color of the sphere
 	sphere->m_material->setBlueDark();
@@ -630,7 +630,7 @@ void keySelect(unsigned char key, int x, int y)
 		if(++resetCount % 10 == 0)
 			sphere->setLocalPos(0.0, 0.0, 0.0);
 		else
-			sphere->setLocalPos(-0.05, -0.23, FRAND(-0.05, 0.2));//(-0.05, -0.18, FRAND(-0.05, 0.2));
+			sphere->setLocalPos(0.00, -0.23, FRAND(-0.05, 0.2));//(-0.05, -0.18, FRAND(-0.05, 0.2));
 		sphere->setSpeed(0.0, 0.0, 0.0);
 		sphere->setAcceleration(0.0, 0.0, 0.0);
 	}
