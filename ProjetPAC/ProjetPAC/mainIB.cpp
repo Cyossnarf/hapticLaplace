@@ -118,7 +118,7 @@ double SPHERE_CHARGE = 1.0;
 const double SPHERE_DAMPING = 0.999;
 
 // stiffness of the haptic device
-const double HAPTIC_STIFFNESS = 800.0;
+const double HAPTIC_STIFFNESS = 1000.0;
 
 
 //------------------------------------------------------------------------------
@@ -795,7 +795,7 @@ void updateHaptics(void)
 	cVector3d devicePos(0.0, 0.0, 0.0);
 
 	// store the force the user applies to the haptic device
-	cVector3d userForce(0.0, 0.0, 0.0);
+	//cVector3d userForce(0.0, 0.0, 0.0);
 
 	// store the desired position of the haptic device
 	cVector3d deviceTargetPos(0.0, 0.0, 0.0);
@@ -876,7 +876,7 @@ void updateHaptics(void)
 		{
 			// compute magnetic forces
 			sphereFce.add(magnetField->magnetForce(*sphere, sphere->getCharge(), sphere->getSpeed()));
-
+			/*
 			// update the trust to give to the user counter force 
 			if (hapticDeviceConnected && (devicePos - deviceTargetPos).length() > 0.015)
 			{
@@ -890,21 +890,22 @@ void updateHaptics(void)
 
 			// compute the user counter force
 			userForce = -(counterForceFactor / 100) * sphereFce;
+			*/
 		}
-
+		/*
 		else
 		{
 			userForce.zero();
 			counterForceFactor = 0;
 		}
-
+		*/
 		/*else
 		{
 		loop = 0;
 		}*/
 
 		// compute acceleration
-		sphere->setAcceleration((sphereFce + userForce) / sphere->getMass());
+		sphere->setAcceleration(sphereFce / sphere->getMass());//((sphereFce + userForce) / sphere->getMass());
 
 		// compute velocity
 		cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());

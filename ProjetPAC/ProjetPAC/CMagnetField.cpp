@@ -119,7 +119,7 @@ void chai3d::cMagnetField::setCurrentIntensity(double value)
 
 {
 	value = (cAbs(value) < 1e-8) ? 0.0 : value;
-
+	/*
 	if (value == 0 && intensity > 0)
 	{
 		for (int i = 0; i < 18; i++)//turns.size->18
@@ -151,7 +151,7 @@ void chai3d::cMagnetField::setCurrentIntensity(double value)
 			turns[i]->rotateAboutGlobalAxisDeg(cVector3d(0.0, 0.0, -1.0), 50 * cSinRad((i + 1) * C_PI / 18));
 		}
 	}
-
+	*/
 	intensity = value;
 }
 
