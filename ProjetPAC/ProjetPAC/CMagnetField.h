@@ -44,7 +44,6 @@ namespace chai3d {
 		double intensity;
 		bool fieldEnabled;
 		std::vector<cMesh*> turns;
-		//cMesh* tube;
 		double transparency;
 
 	};

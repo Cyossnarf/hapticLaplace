@@ -627,10 +627,12 @@ void keySelect(unsigned char key, int x, int y)
 	// option r: reset position of the sphere
 	if (key == 'r')
 	{
+		/*
 		if(++resetCount % 10 == 0)
 			sphere->setLocalPos(0.0, 0.0, 0.0);
 		else
-			sphere->setLocalPos(0.00, -0.23, FRAND(-0.05, 0.2));//(-0.05, -0.18, FRAND(-0.05, 0.2));
+		*/
+		sphere->setLocalPos(0.00, -0.23, FRAND(-0.05, 0.2));//(-0.05, -0.18, FRAND(-0.05, 0.2));
 		sphere->setSpeed(0.0, 0.0, 0.0);
 		sphere->setAcceleration(0.0, 0.0, 0.0);
 	}
@@ -656,7 +658,7 @@ void keySelect(unsigned char key, int x, int y)
 	// option 4: select the current intensity of the turns
 	if (key == '4')
 	{
-		//selection = "intensity";
+		selection = "intensity";
 	}
 
 	// option +: increase the selected variable
@@ -849,10 +851,13 @@ void updateHaptics(void)
 
 		// get sphere velocity from user
 		cVector3d userVel(userMovex, userMovey, userMovez);
+		/*
 		if (resetCount == 0 || resetCount % 10 != 0)
 			userVel = userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
 		else
 			userVel = userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
+		*/
+		userVel = userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
 
 		// limit the velocity maximal that the user can give to the sphere
 		if (userVel.length() > 0.0008)
