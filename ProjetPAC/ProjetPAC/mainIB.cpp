@@ -636,10 +636,7 @@ void keySelect(unsigned char key, int x, int y)
 	// option c: start camera movement
 	if (key == 'c')
 	{
-		// position and orient the camera
-		camera->set(cVector3d(0.3, 0.3, 0.05),	// camera position (eye)
-			cVector3d(0.00, 0.00, 0.00),	// lookat position (target)
-			cVector3d(0.00, 0.00, 1.00));   // direction of the (up) vector
+		camera->setInMovement();
 	}
 
 	// option 1: select the transparency level of the field
@@ -742,6 +739,11 @@ void graphicsTimer(int data)
 
 void updateGraphics(void)
 {
+	if (camera->isInMovement())
+	{
+		camera->moveCam();
+	}
+
 	/////////////////////////////////////////////////////////////////////
 	// UPDATE WIDGETS
 	/////////////////////////////////////////////////////////////////////
