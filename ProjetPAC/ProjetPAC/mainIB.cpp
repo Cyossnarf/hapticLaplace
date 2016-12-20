@@ -46,6 +46,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "CMagnetField.h"
 #include "CMagnetSphere.h"
 //#include "CCircle.h"
+#include "CMobileCam.h"
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -128,8 +129,8 @@ const double HAPTIC_STIFFNESS = 1000.0;
 // a world that contains all objects of the virtual environment
 cWorld* world;
 
-// a camera to render the world in the window display
-cCamera* camera;
+// a camera to render the world in the window display, and mobile btw...
+cMobileCam *camera;
 
 // a light source to illuminate the objects in the world
 cSpotLight *light;
@@ -329,14 +330,9 @@ int main(int argc, char* argv[])
 	world->m_backgroundColor.setWhite();
 
 	// create a camera and insert it into the virtual world
-	camera = new cCamera(world);
+	camera = new cMobileCam(world);
 	world->addChild(camera);
-
-	// position and orient the camera
-	camera->set(cVector3d(0.4, 0.00, 0.00),//(0.3, 0.00, 0.10),    // camera position (eye)
-		cVector3d(0.00, 0.00, 0.00),//0.04),    // lookat position (target)
-		cVector3d(0.00, 0.00, 1.00));   // direction of the (up) vector
-
+	
 										// set the near and far clipping planes of the camera
 										// anything in front/behind these clipping planes will not be rendered
 	camera->setClippingPlanes(0.01, 10.0);
@@ -635,6 +631,15 @@ void keySelect(unsigned char key, int x, int y)
 		sphere->setLocalPos(0.00, -0.23, FRAND(-0.05, 0.2));//(-0.05, -0.18, FRAND(-0.05, 0.2));
 		sphere->setSpeed(0.0, 0.0, 0.0);
 		sphere->setAcceleration(0.0, 0.0, 0.0);
+	}
+
+	// option c: start camera movement
+	if (key == 'c')
+	{
+		// position and orient the camera
+		camera->set(cVector3d(0.3, 0.3, 0.05),	// camera position (eye)
+			cVector3d(0.00, 0.00, 0.00),	// lookat position (target)
+			cVector3d(0.00, 0.00, 1.00));   // direction of the (up) vector
 	}
 
 	// option 1: select the transparency level of the field

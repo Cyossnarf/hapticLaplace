@@ -2,6 +2,7 @@
 #define CMagnetFieldh
 
 #include "world/CMesh.h"
+//#include "world/CMultiMesh.h"//utile pour la trajectoire
 #include "world/CGenericObject.h"
 #include <vector>
 
@@ -43,7 +44,7 @@ namespace chai3d {
 		cVector3d radial;
 		double intensity;
 		bool fieldEnabled;
-		std::vector<cMesh*> turns;
+		//std::vector<cMesh*> turns;//utile pour la bobine
 		double transparency;
 
 	};
