@@ -134,8 +134,6 @@ cMobileCam *camera;
 
 // a light source to illuminate the objects in the world
 cSpotLight *light;
-
-// a light source to illuminate the objects in the world
 cSpotLight *light2;
 
 // a haptic device handler
@@ -349,53 +347,39 @@ int main(int argc, char* argv[])
 
 	// create a light source
 	light = new cSpotLight(world);
-
-	// attach light to camera
-	world->addChild(light);
-
-	// enable light source
-	light->setEnabled(true);
-
-	// position the light source
-	light->setLocalPos(0.0, 0.3, 0.4);
-
-	// define the direction of the light beam
-	light->setDir(0.0, -0.25, -0.4);
-
-	// enable this light source to generate shadows
-	light->setShadowMapEnabled(true);
-
-	// set the resolution of the shadow map
-	//light->m_shadowMap->setQualityLow();
-	light->m_shadowMap->setQualityMedium();
-
-	// create a light source
 	light2 = new cSpotLight(world);
 
 	// attach light to camera
+	world->addChild(light);
 	world->addChild(light2);
 
 	// enable light source
+	light->setEnabled(true);
 	light2->setEnabled(true);
 
 	// position the light source
-	light2->setLocalPos(0.0, 0.3, -0.4);
+	light->setLocalPos(0.4, -0.4, 0.3);//(0.0, 0.3, 0.4);
+	light2->setLocalPos(-0.2, -0.1, 1.0);//(0.0, 0.3, -0.4);
 
 	// define the direction of the light beam
-	light2->setDir(0.0, -0.25, 0.4);
+	light->setDir(-0.5, 0.3, -0.2);//(0.0, -0.25, -0.4);
+	light2->setDir(0.0, 0.1, -0.5);//(0.0, -0.25, 0.4);
 
 	// enable this light source to generate shadows
+	light->setShadowMapEnabled(true);
 	light2->setShadowMapEnabled(true);
 
 	// set the resolution of the shadow map
 	//light->m_shadowMap->setQualityLow();
+	light->m_shadowMap->setQualityMedium();
 	light2->m_shadowMap->setQualityMedium();
 
 	// set shadow factor
 	world->setShadowIntensity(0.3);
 
 	// set light cone half angle
-	light->setCutOffAngleDeg(30);
+	light->setCutOffAngleDeg(40);//(30);
+	light2->setCutOffAngleDeg(40);
 
 
 	//--------------------------------------------------------------------------
@@ -441,7 +425,7 @@ int main(int argc, char* argv[])
 	world->addChild(magnetField);
 
 	// set position of the magnetic field
-	magnetField->setLocalPos(0.0, 0.00, 0.00);//(0.0, 0.05, 0.01);
+	magnetField->setLocalPos(-0.4, 0.0, 0.0);//(0.0, 0.05, 0.01);
 
 	//--------------------------------------------------------------------------
 	// WIDGETS

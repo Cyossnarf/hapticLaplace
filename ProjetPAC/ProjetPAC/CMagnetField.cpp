@@ -21,7 +21,7 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 	
 	double gap_sp = 0.015;
 	// create the first turn
-	cCreateCylinder(this, height_sp, in_radius);//cCreatePipe(this, height_sp, in_radius, out_radius);
+	cCreateCylinder(this, 0.4, in_radius);//cCreatePipe(this, height_sp, in_radius, out_radius);
 	setLocalPos(currentPos);
 
 	// set the appearance of the first turn
@@ -59,7 +59,7 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 
 	// configure the appearance
 	m_material->setBlueLightSky();
-	setTransparency(0.5);
+	setTransparency(1);
 
 	// set the orientation of the field
 	rotateAround(cVector3d(0.0, 1.0, 0.0), C_PI_DIV_2);// -C_PI_DIV_2*0.8);
