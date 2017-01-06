@@ -24,6 +24,7 @@ namespace chai3d {
 		cVector3d up;
 		bool inMovement;
 		int step;
+		int state;
 
 	};
 

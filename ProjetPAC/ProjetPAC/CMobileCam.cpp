@@ -11,19 +11,20 @@ chai3d::cMobileCam::cMobileCam(cWorld* world, const cVector3d &eye, const cVecto
 	this->up = up;
 	this->inMovement = false;
 	this->step = 0;
+	this->state = 1;
 }
 
 void chai3d::cMobileCam::moveCam()
 
 {
-	if (this->step == 30)
+	if (this->step == 30 * (this->state + 1) / 2)//dans le sens aller on s'arrete pour step==30, dans le sens retour pour step==0
 	{
 		this->inMovement = false;
-		this->step = 0;
+		this->state *= -1;
 	}
 	else
 	{
-		this->step += 1;
+		this->step += this->state;
 		double alpha = this->step * C_PI / (30 * 4);
 		// position and orient the camera
 		this->set(cVector3d(0.4*cCosRad(alpha), 0.4*cSinRad(alpha), step * 0.15 / 30),	// camera position (eye)
