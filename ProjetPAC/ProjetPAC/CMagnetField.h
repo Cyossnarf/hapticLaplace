@@ -13,7 +13,7 @@ namespace chai3d {
 
 	public :
 		
-		cMagnetField(const cVector3d &pos = cVector3d(0.0, 0.0, 0.0), double in_radius = 0.12, double out_radius = 0.13, double intensity = 0.25, double height = 1);
+		cMagnetField(const cVector3d &pos = cVector3d(0.0, 0.0, 0.0), double in_radius = 0.12, double out_radius = 0.13, double intensity = 0.25, double len = 0.4);
 		~cMagnetField();
 		
 		void rotateAround(cVector3d &rotationAxis, double rotation);
@@ -27,6 +27,7 @@ namespace chai3d {
 
 		inline double getInnerRadius() const { return innerRadius; }
 		inline double getOuterRadius() const { return outerRadius; }
+		inline double getLength() const { return length; }
 
 		inline double getCurrentIntensity() const { return intensity; }
 		void setCurrentIntensity(const double value);
@@ -40,6 +41,7 @@ namespace chai3d {
 		
 		double innerRadius;
 		double outerRadius;
+		double length;
 		cVector3d direction;
 		cVector3d radial;
 		double intensity;

@@ -5,7 +5,7 @@
 
 #define MU_0 (4 * C_PI * 1e-7)
 
-chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, double out_radius, double intensity, double height) : cMesh()
+chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, double out_radius, double intensity, double len) : cMesh()
 
 {
 	// set properties of the field
@@ -15,13 +15,14 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 	this->intensity = intensity;
 	this->innerRadius = in_radius;
 	this->outerRadius = out_radius;
+	this->length = len;
 
 	cVector3d currentPos(pos);
 	double height_sp = 0.008;
 	
 	double gap_sp = 0.015;
 	// create the first turn
-	cCreateCylinder(this, 0.4, in_radius);//cCreatePipe(this, height_sp, in_radius, out_radius);
+	cCreateCylinder(this, len, in_radius);//cCreatePipe(this, height_sp, in_radius, out_radius);
 	setLocalPos(currentPos);
 
 	// set the appearance of the first turn

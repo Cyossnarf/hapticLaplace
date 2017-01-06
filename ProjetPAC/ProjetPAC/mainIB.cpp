@@ -425,7 +425,7 @@ int main(int argc, char* argv[])
 	world->addChild(magnetField);
 
 	// set position of the magnetic field
-	magnetField->setLocalPos(-0.4, 0.0, 0.0);//(0.0, 0.05, 0.01);
+	magnetField->setLocalPos(-magnetField->getLength(), 0.0, 0.0);//(0.0, 0.05, 0.01);
 
 	//--------------------------------------------------------------------------
 	// WIDGETS
