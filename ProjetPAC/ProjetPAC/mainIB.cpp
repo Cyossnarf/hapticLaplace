@@ -155,6 +155,9 @@ cMagnetField *magnetField;
 // circle to be drawn around the magnet field
 //cCircle *circle;
 
+// a bar to display info
+TwBar *bar1;
+
 // a label to explain what is happening
 cLabel* labelMessage;
 
@@ -317,6 +320,11 @@ int main(int argc, char* argv[])
 		glutFullScreen();
 	}
 
+	// initialize AntTweakBar
+	TwInit(TW_OPENGL, NULL);
+
+	// telling AntTweakBar the size of the graphic window
+	TwWindowSize(windowW, windowH);
 
 	//--------------------------------------------------------------------------
 	// WORLD - CAMERA - LIGHTING
@@ -427,6 +435,16 @@ int main(int argc, char* argv[])
 
 	// set position of the magnetic field
 	magnetField->setLocalPos(-magnetField->getLength(), 0.0, 0.0);//(0.0, 0.05, 0.01);
+
+	//--------------------------------------------------------------------------
+	// BARS
+	//--------------------------------------------------------------------------
+
+	// create a bar
+	bar1 = TwNewBar("Bonjour le monde");
+
+	// add a variable
+	TwAddVarRW(bar1, "Charge", TW_TYPE_FLOAT, &SPHERE_CHARGE, "");
 
 	//--------------------------------------------------------------------------
 	// WIDGETS
@@ -751,7 +769,10 @@ void updateGraphics(void)
 	world->updateShadowMaps(false, mirroredDisplay);
 	
 	// render world
-	camera->renderView(windowW, windowH);
+	camera->renderView(windowW*0.7, windowH);
+
+	// display bars
+	TwDraw();
 
 	// swap buffers
 	glutSwapBuffers();

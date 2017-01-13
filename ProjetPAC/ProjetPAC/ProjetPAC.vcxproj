@@ -101,7 +101,7 @@
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>../../external/CHAI3D/lib/$(Configuration)/$(Platform);../../external/CHAI3D/extras/freeglut/lib/$(Configuration)/$(Platform);../../external/AntTweakBar/lib/$(Configuration)/$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../external/CHAI3D/lib/$(Configuration)/$(Platform);../../external/CHAI3D/extras/freeglut/lib/$(Configuration)/$(Platform);../../external/AntTweakBar/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>chai3d.lib;freeglut.lib;AntTweakBar.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -116,7 +116,7 @@
       <PreprocessorDefinitions>WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>../../external/CHAI3D/lib/$(Configuration)/$(Platform);../../external/CHAI3D/extras/freeglut/lib/$(Configuration)/$(Platform);../../external/AntTweakBar/lib/$(Configuration)/$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../external/CHAI3D/lib/$(Configuration)/$(Platform);../../external/CHAI3D/extras/freeglut/lib/$(Configuration)/$(Platform);../../external/AntTweakBar/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>chai3d.lib;freeglut.lib;AntTweakBar64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -135,7 +135,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>../../external/CHAI3D/lib/$(Configuration)/$(Platform);../../external/CHAI3D/extras/freeglut/lib/$(Configuration)/$(Platform);../../external/AntTweakBar/lib/$(Configuration)/$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../external/CHAI3D/lib/$(Configuration)/$(Platform);../../external/CHAI3D/extras/freeglut/lib/$(Configuration)/$(Platform);../../external/AntTweakBar/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>chai3d.lib;freeglut.lib;AntTweakBar.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -154,7 +154,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>../../external/CHAI3D/lib/$(Configuration)/$(Platform);../../external/CHAI3D/extras/freeglut/lib/$(Configuration)/$(Platform);../../external/AntTweakBar/lib/$(Configuration)/$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../external/CHAI3D/lib/$(Configuration)/$(Platform);../../external/CHAI3D/extras/freeglut/lib/$(Configuration)/$(Platform);../../external/AntTweakBar/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>chai3d.lib;freeglut.lib;AntTweakBar64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
