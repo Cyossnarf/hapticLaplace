@@ -47,6 +47,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "CMagnetSphere.h"
 //#include "CCircle.h"
 #include "CMobileCam.h"
+#include "AntTweakBar.h"
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
