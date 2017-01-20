@@ -199,6 +199,13 @@ int nbTraj = 0;
 //
 cVector3d devicePos;
 cVector3d position;
+cVector3d posref;
+
+// score
+int nbvisees=0;
+int nbtouches=0;
+cMagnetSphere *cible;
+
 //------------------------------------------------------------------------------
 // DECLARED FUNCTIONS
 //------------------------------------------------------------------------------
@@ -232,6 +239,9 @@ void updateHaptics(void);
 
 // function that writes some data to be print into a text file
 void logData(vector<double> data, double interval, string filename);
+
+//reset function
+void reset();
 
 
 //------------------------------------------------------------------------------
@@ -420,6 +430,13 @@ int main(int argc, char* argv[])
 
 	// set position of the sphere
 	sphere->setLocalPos(0.00, -0.23, 0.0);//(-0.05, -0.18, 0.0);
+	posref = sphere->getLocalPos();
+
+	//pose la cible
+	cible = new cMagnetSphere(SPHERE_RADIUS * 2, 0, 0, SPHERE_DAMPING);
+	cible->setLocalPos(0.00, 0.23, 0.0);
+	cible->m_material->setRed();
+	world->addChild(cible);
 
 	// set color of the sphere
 	sphere->m_material->setBlueDark();
@@ -575,6 +592,21 @@ void resizeWindow(int w, int h)
 //------------------------------------------------------------------------------
 
 
+void reset(){
+	position = cVector3d(0.0, -0.23, 0.0);
+	world->clearAllChildren();
+	world->addChild(camera);
+	world->addChild(light);
+	world->addChild(light2);
+	world->addChild(sphere);
+	world->addChild(cible);
+	sphere->setAcceleration(0.0, 0.0, 0.0);
+	sphere->setSpeed(0.0, 0.0, 0.0);
+	sphere->setLocalPos(0.00, -0.23, 0.00);
+	world->addChild(magnetField);
+	nbTraj = 0;
+}
+
 
 void keySelect(unsigned char key, int x, int y)
 {
@@ -615,17 +647,20 @@ void keySelect(unsigned char key, int x, int y)
 	// option r: reset position of the sphere
 	if (key == 'r')
 	{
-		position = cVector3d(0.0, -0.23, 0.0);
-		world->clearAllChildren();
-		world->addChild(camera);
-		world->addChild(light);
-		world->addChild(light2);
-		world->addChild(sphere);
-		sphere->setAcceleration(0.0, 0.0, 0.0);
-		sphere->setSpeed(0.0, 0.0, 0.0);
-		sphere->setLocalPos(0.00, -0.23, 0.00);
-		world->addChild(magnetField);
-		nbTraj = 0;
+		reset();
+
+	}
+
+	// option s: reset all (including score, charge, mass and field)
+	if (key == 's')
+	{
+		nbvisees = 0;
+		nbtouches = 0;
+		cible->setLocalPos(0.00, 0.23, 0.0);
+		reset();
+		sphere->setMass(0.04);
+		sphere->setCharge(0.5);
+		magnetField->setCurrentIntensity(0.25);
 	}
 
 	// option c: start camera movement
@@ -724,6 +759,9 @@ void close(void)
 //------------------------------------------------------------------------------
 const cVector3d testSpeed = cVector3d(0.0, 0.0, 0.0);
 queue<cMagnetSphere*> traj;
+queue<cMagnetSphere*> visee;
+cMagnetSphere *v;
+
 void graphicsTimer(int data)
 {
 	cMagnetSphere *a;
@@ -733,6 +771,55 @@ void graphicsTimer(int data)
 	}
 
 	glutTimerFunc(50, graphicsTimer, 0);
+	if (sphere->getLocalPos().y() > 0.3){
+		reset();
+	}
+	if (sphere->getLocalPos().z() > 0.18){
+		reset();
+	}
+	if (sphere->getLocalPos().y() < -0.3){
+		reset();
+	}
+	if (sphere->getLocalPos().z() < -0.18){
+		reset();
+	}
+	if (sphere->getLocalPos().equals(posref, 0.005)){
+		v = new cMagnetSphere(SPHERE_RADIUS / 5, 0, 0, SPHERE_DAMPING);
+		v->setLocalPos(0.00+devicePos.x(), -0.23+devicePos.y(), 0.0+devicePos.z());
+		world->addChild(v);
+		visee.push(v);
+		v = new cMagnetSphere(SPHERE_RADIUS / 5, 0, 0, SPHERE_DAMPING);
+		v->setLocalPos(0.00 + devicePos.x()/2, -0.23 + devicePos.y()/2, 0.0 + devicePos.z()/2);
+		world->addChild(v);
+		visee.push(v);
+		v = new cMagnetSphere(SPHERE_RADIUS / 5, 0, 0, SPHERE_DAMPING);
+		v->setLocalPos(0.00 + devicePos.x()/4, -0.23 + devicePos.y()/4, 0.0 + devicePos.z()/4);
+		world->addChild(v);
+		visee.push(v);
+		v = new cMagnetSphere(SPHERE_RADIUS / 5, 0, 0, SPHERE_DAMPING);
+		v->setLocalPos(0.00 + 3*devicePos.x()/4, -0.23 + 3*devicePos.y()/4, 0.0 + 3*devicePos.z()/4);
+		world->addChild(v);
+		visee.push(v);
+		while (visee.size() > 4){
+			v = visee.front();
+			visee.pop();
+			world->deleteChild(v);
+		}
+	}
+	else{
+		while (visee.size() > 0){
+			v = visee.front();
+			visee.pop();
+			world->deleteChild(v);
+		}
+		if (sphere->getLocalPos().equals(cible->getLocalPos(), 0.01)){
+			nbtouches += 1;
+			cible->setLocalPos(0.00, FRAND(0.0, 0.27), FRAND(-0.15, 0.15));
+			reset();
+			
+
+		}
+	}
 	if (nbTraj == 0)
 	{
 		while (! traj.empty())
@@ -742,12 +829,14 @@ void graphicsTimer(int data)
 	}
 	if ((nbTraj < 50) && !(sphere->getSpeed().equals( testSpeed)))
 	{
-			a = new cMagnetSphere(SPHERE_RADIUS / 10, 0, 0, SPHERE_DAMPING);
-			a->setLocalPos(sphere->getLocalPos());
-			world->addChild(a);
-			traj.push(a);
-			nbTraj += 1;
-		
+		a = new cMagnetSphere(SPHERE_RADIUS / 10, 0, 0, SPHERE_DAMPING);
+		a->setLocalPos(sphere->getLocalPos());
+		world->addChild(a);
+		traj.push(a);
+		nbTraj += 1;
+		if (nbTraj == 3){
+			nbvisees += 1;
+		}
 	}
 	if ((nbTraj == 50) && !(sphere->getSpeed().equals(testSpeed)))
 	{
@@ -775,7 +864,7 @@ void updateGraphics(void)
 	/////////////////////////////////////////////////////////////////////
 
 	// update variable values
-	labelInfo->setText("field opacity : " + cStr(magnetField->getTransparency() * 100) + "% | sphere mass : " + cStr(sphere->getMass()) + " kg | sphere charge : " + cStr(sphere->getCharge()) + " C | current intensity : " + cStr(magnetField->getCurrentIntensity()) + " A");
+	labelInfo->setText("field opacity : " + cStr(magnetField->getTransparency() * 100) + "% | sphere mass : " + cStr(sphere->getMass()) + " kg | sphere charge : " + cStr(sphere->getCharge()) + " C | current intensity : " + cStr(magnetField->getCurrentIntensity()) + " A  |  score : "+ cStr(nbtouches)+"/"+ cStr(nbvisees));
 
 	// update position of info label
 	labelInfo->setLocalPos((int)(0.5 * (windowW - labelInfo->getWidth())), 15);
@@ -942,16 +1031,16 @@ void updateHaptics(void)
 		// compute velocity
 		bool testButton;
 		hapticDevice->getUserSwitch(0, testButton);
-		if (!(sphere->getSpeed().equals(testSpeed))){
+		if (!sphere->getLocalPos().equals(posref,0.005)){
 
 			cVector3d newVel(sphere->getSpeed() + timeInterval * sphere->getAcceleration());
 			sphere->setSpeed(newVel);
-		}/*else{*/
+		}else{
 			if (testButton){
 				cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());
 				sphere->setSpeed(newVel);
 			}
-		//}
+		}
 		
 		// compute position
 		cVector3d spherePos = position + timeInterval * sphere->getSpeed() + cSqr(timeInterval) * sphere->getAcceleration();
