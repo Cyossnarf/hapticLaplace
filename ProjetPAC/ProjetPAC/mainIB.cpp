@@ -40,14 +40,14 @@ POSSIBILITY OF SUCH DAMAGE.
 \version   3.0.0 $Rev: 1795 $
 */
 //==============================================================================
-
+#include <queue>
+using namespace std;
 //------------------------------------------------------------------------------
 #include "chai3d.h"
 #include "CMagnetField.h"
 #include "CMagnetSphere.h"
 //#include "CCircle.h"
 #include "CMobileCam.h"
-#include "AntTweakBar.h"
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
@@ -114,13 +114,13 @@ const double SPHERE_RADIUS = 0.005;
 double SPHERE_MASS = 0.04;
 
 // charge of the sphere (can be modified during the simulation)
-double SPHERE_CHARGE = 1.0;
+double SPHERE_CHARGE = 0.5;
 
 // damping of the sphere
 const double SPHERE_DAMPING = 0.999;
 
 // stiffness of the haptic device
-const double HAPTIC_STIFFNESS = 1000.0;
+const double HAPTIC_STIFFNESS = 10.0;
 
 
 //------------------------------------------------------------------------------
@@ -154,9 +154,6 @@ cMagnetField *magnetField;
 
 // circle to be drawn around the magnet field
 //cCircle *circle;
-
-// a bar to display info
-TwBar *bar1;
 
 // a label to explain what is happening
 cLabel* labelMessage;
@@ -195,8 +192,13 @@ double userMovex(0.0);
 double userMovey(0.0);
 double userMovez(0.0);
 
+//camera dynamic indication
+int sensCamera = 1;
+int nbTraj = 0;
 
-
+//
+cVector3d devicePos;
+cVector3d position;
 //------------------------------------------------------------------------------
 // DECLARED FUNCTIONS
 //------------------------------------------------------------------------------
@@ -286,10 +288,10 @@ int main(int argc, char* argv[])
 	// retrieve  resolution of computer display and position window accordingly
 	screenW = glutGet(GLUT_SCREEN_WIDTH);
 	screenH = glutGet(GLUT_SCREEN_HEIGHT);
-	windowW = 0.8 * screenH;
+	windowW = 0.8 * screenW;
 	windowH = 0.5 * screenH;
 	windowPosY = (screenH - windowH) / 2;
-	windowPosX = windowPosY;
+	windowPosX = (screenW - windowW) / 2;
 
 	// initialize the OpenGL GLUT window
 	glutInitWindowPosition(windowPosX, windowPosY);
@@ -320,11 +322,6 @@ int main(int argc, char* argv[])
 		glutFullScreen();
 	}
 
-	// initialize AntTweakBar
-	TwInit(TW_OPENGL, NULL);
-
-	// telling AntTweakBar the size of the graphic window
-	TwWindowSize(windowW, windowH);
 
 	//--------------------------------------------------------------------------
 	// WORLD - CAMERA - LIGHTING
@@ -334,7 +331,7 @@ int main(int argc, char* argv[])
 	world = new cWorld();
 
 	// set the background color of the environment
-	world->m_backgroundColor.setWhite();
+	world->m_backgroundColor.setBlack();
 
 	// create a camera and insert it into the virtual world
 	camera = new cMobileCam(world);
@@ -437,16 +434,6 @@ int main(int argc, char* argv[])
 	magnetField->setLocalPos(-magnetField->getLength(), 0.0, 0.0);//(0.0, 0.05, 0.01);
 
 	//--------------------------------------------------------------------------
-	// BARS
-	//--------------------------------------------------------------------------
-
-	// create a bar
-	bar1 = TwNewBar("Bonjour le monde");
-
-	// add a variable
-	TwAddVarRW(bar1, "Charge", TW_TYPE_FLOAT, &SPHERE_CHARGE, "");
-
-	//--------------------------------------------------------------------------
 	// WIDGETS
 	//--------------------------------------------------------------------------
 
@@ -458,7 +445,7 @@ int main(int argc, char* argv[])
 	camera->m_frontLayer->addChild(labelMessage);
 
 	// set font color
-	labelMessage->m_fontColor.setBlack();
+	labelMessage->m_fontColor.setWhite();
 
 	// set text message
 	labelMessage->setText("move a charge into a magnetic field");
@@ -587,6 +574,8 @@ void resizeWindow(int w, int h)
 
 //------------------------------------------------------------------------------
 
+
+
 void keySelect(unsigned char key, int x, int y)
 {
 	// option ESC: exit
@@ -626,20 +615,24 @@ void keySelect(unsigned char key, int x, int y)
 	// option r: reset position of the sphere
 	if (key == 'r')
 	{
-		/*
-		if(++resetCount % 10 == 0)
-			sphere->setLocalPos(0.0, 0.0, 0.0);
-		else
-		*/
-		sphere->setLocalPos(0.00, -0.23, FRAND(-0.05, 0.2));//(-0.05, -0.18, FRAND(-0.05, 0.2));
-		sphere->setSpeed(0.0, 0.0, 0.0);
+		position = cVector3d(0.0, -0.23, 0.0);
+		world->clearAllChildren();
+		world->addChild(camera);
+		world->addChild(light);
+		world->addChild(light2);
+		world->addChild(sphere);
 		sphere->setAcceleration(0.0, 0.0, 0.0);
+		sphere->setSpeed(0.0, 0.0, 0.0);
+		sphere->setLocalPos(0.00, -0.23, 0.00);
+		world->addChild(magnetField);
+		nbTraj = 0;
 	}
 
 	// option c: start camera movement
 	if (key == 'c')
 	{
-		camera->setInMovement();
+		camera->setInMovement(sensCamera);
+		sensCamera = -1*sensCamera;
 	}
 
 	// option 1: select the transparency level of the field
@@ -715,6 +708,8 @@ void keySelect(unsigned char key, int x, int y)
 	}
 }
 
+
+
 //------------------------------------------------------------------------------
 
 void close(void)
@@ -727,15 +722,43 @@ void close(void)
 }
 
 //------------------------------------------------------------------------------
-
+const cVector3d testSpeed = cVector3d(0.0, 0.0, 0.0);
+queue<cMagnetSphere*> traj;
 void graphicsTimer(int data)
 {
+	cMagnetSphere *a;
 	if (simulationRunning)
 	{
 		glutPostRedisplay();
 	}
 
 	glutTimerFunc(50, graphicsTimer, 0);
+	if (nbTraj == 0)
+	{
+		while (! traj.empty())
+		{
+			traj.pop();
+		}
+	}
+	if ((nbTraj < 50) && !(sphere->getSpeed().equals( testSpeed)))
+	{
+			a = new cMagnetSphere(SPHERE_RADIUS / 10, 0, 0, SPHERE_DAMPING);
+			a->setLocalPos(sphere->getLocalPos());
+			world->addChild(a);
+			traj.push(a);
+			nbTraj += 1;
+		
+	}
+	if ((nbTraj == 50) && !(sphere->getSpeed().equals(testSpeed)))
+	{
+		a = traj.front();
+		traj.pop();
+		world->deleteChild(a);
+		a = new cMagnetSphere(SPHERE_RADIUS / 10, 0, 0, SPHERE_DAMPING);
+		a->setLocalPos(sphere->getLocalPos());
+		world->addChild(a);
+		traj.push(a);
+	}
 }
 
 //------------------------------------------------------------------------------
@@ -744,7 +767,7 @@ void updateGraphics(void)
 {
 	if (camera->isInMovement())
 	{
-		camera->moveCam();
+		camera->moveCam((-1)*sensCamera);
 	}
 
 	/////////////////////////////////////////////////////////////////////
@@ -769,10 +792,7 @@ void updateGraphics(void)
 	world->updateShadowMaps(false, mirroredDisplay);
 	
 	// render world
-	camera->renderView(windowW*0.7, windowH);
-
-	// display bars
-	TwDraw();
+	camera->renderView(windowW, windowH);
 
 	// swap buffers
 	glutSwapBuffers();
@@ -807,7 +827,6 @@ void updateHaptics(void)
 	hapticDevice->calibrate();
 
 	// store the current position of the haptic device
-	cVector3d devicePos(0.0, 0.0, 0.0);
 
 	// store the force the user applies to the haptic device
 	//cVector3d userForce(0.0, 0.0, 0.0);
@@ -860,17 +879,12 @@ void updateHaptics(void)
 		devicePos.x(0.0);
 
 		// read sphere position
-		cVector3d position(sphere->getLocalPos());
+		position = cVector3d(sphere->getLocalPos());
 
 		// get sphere velocity from user
-		cVector3d userVel(userMovex, userMovey, userMovez);
-		/*
-		if (resetCount == 0 || resetCount % 10 != 0)
-			userVel = userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
-		else
-			userVel = userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
-		*/
-		userVel = userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
+		//cVector3d userVel(userMovex, userMovey, userMovez);
+		cVector3d userVel(devicePos.x(),devicePos.y(),devicePos.z());
+		userVel = (userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection())*0.001;
 
 		// limit the velocity maximal that the user can give to the sphere
 		if (userVel.length() > 0.0008)
@@ -926,9 +940,19 @@ void updateHaptics(void)
 		sphere->setAcceleration(sphereFce / sphere->getMass());//((sphereFce + userForce) / sphere->getMass());
 
 		// compute velocity
-		cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());
-		sphere->setSpeed(newVel);
+		bool testButton;
+		hapticDevice->getUserSwitch(0, testButton);
+		if (!(sphere->getSpeed().equals(testSpeed))){
 
+			cVector3d newVel(sphere->getSpeed() + timeInterval * sphere->getAcceleration());
+			sphere->setSpeed(newVel);
+		}/*else{*/
+			if (testButton){
+				cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());
+				sphere->setSpeed(newVel);
+			}
+		//}
+		
 		// compute position
 		cVector3d spherePos = position + timeInterval * sphere->getSpeed() + cSqr(timeInterval) * sphere->getAcceleration();
 
@@ -964,7 +988,7 @@ void updateHaptics(void)
 			forceToApply.zero();
 		}
 
-		hapticDevice->setForce(forceToApply);
+		//hapticDevice->setForce(forceToApply);
 
 
 	}

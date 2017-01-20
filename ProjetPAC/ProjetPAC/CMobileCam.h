@@ -12,10 +12,10 @@ namespace chai3d {
 		
 		cMobileCam(cWorld* world, const cVector3d &eye = cVector3d(0.4, 0.0, 0.0), const cVector3d &target = cVector3d(0.0, 0.0, 0.0), const cVector3d &up = cVector3d(0.0, 0.0, 1.0));
 		
-		inline void setInMovement() { inMovement = true; }
+		inline void setInMovement(int sens) { inMovement = true; }
 		inline bool isInMovement() const { return inMovement; }
 		
-		void moveCam();
+		void moveCam(int sens);
 
 	private:
 
@@ -24,7 +24,6 @@ namespace chai3d {
 		cVector3d up;
 		bool inMovement;
 		int step;
-		int state;
 
 	};
 
