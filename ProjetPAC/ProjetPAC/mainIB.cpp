@@ -206,6 +206,9 @@ int nbvisees=0;
 int nbtouches=0;
 cMagnetSphere *cible;
 
+// clear forces for the sphere
+cVector3d sphereFce;
+
 //------------------------------------------------------------------------------
 // DECLARED FUNCTIONS
 //------------------------------------------------------------------------------
@@ -761,6 +764,8 @@ const cVector3d testSpeed = cVector3d(0.0, 0.0, 0.0);
 queue<cMagnetSphere*> traj;
 queue<cMagnetSphere*> visee;
 cMagnetSphere *v;
+cMagnetSphere *rayon;
+bool rayonex = false;
 
 void graphicsTimer(int data)
 {
@@ -769,8 +774,27 @@ void graphicsTimer(int data)
 	{
 		glutPostRedisplay();
 	}
-
 	glutTimerFunc(50, graphicsTimer, 0);
+	/*if (!sphereFce.equals(testSpeed,0.000000001f)){
+		if (!rayonex){
+			double v2 = sphere->getSpeed().x()*sphere->getSpeed().x() + sphere->getSpeed().y()*sphere->getSpeed().y() + sphere->getSpeed().z()*sphere->getSpeed().z();
+			double Fce = sqrt(sphereFce.x()*sphereFce.x() + sphereFce.y()*sphereFce.y() + sphereFce.z()*sphereFce.z());
+			rayon = new cMagnetSphere(sphere->getMass()* v2 / Fce , 0, 0, SPHERE_DAMPING);
+			double cenx = sphere->getLocalPos().x() + rayon->getRadius()*sphereFce.x() / Fce;
+			double ceny = sphere->getLocalPos().y() + rayon->getRadius()*sphereFce.y() / Fce;
+			double cenz = sphere->getLocalPos().z() + rayon->getRadius()*sphereFce.z() / Fce;
+			rayon->setLocalPos(cenx,ceny,cenz);
+			rayon->setTransparencyLevel(0.45);
+			world->addChild(rayon);
+			rayonex = true;
+		}
+	}
+	else{
+		if (rayonex){
+			world->deleteChild(rayon);
+			rayonex = false;
+		}
+	}*/
 	if (sphere->getLocalPos().y() > 0.3){
 		reset();
 	}
@@ -988,7 +1012,6 @@ void updateHaptics(void)
 		/////////////////////////////////////////////////////////////////////////
 
 		// clear forces for the sphere
-		cVector3d sphereFce;
 		sphereFce.zero();
 
 		data.push_back(counterForceFactor);
