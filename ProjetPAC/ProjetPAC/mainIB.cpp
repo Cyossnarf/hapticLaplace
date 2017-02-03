@@ -116,6 +116,9 @@ double SPHERE_MASS = 0.04;
 // charge of the sphere (can be modified during the simulation)
 double SPHERE_CHARGE = 1.0;
 
+// speed vector of the sphere (can be modified during the simulation)
+float SPHERE_SPEED[3] = { 0.1f, 0.2f, 0.0f };//double *SPHERE_SPEED;
+
 // damping of the sphere
 const double SPHERE_DAMPING = 0.999;
 
@@ -164,6 +167,9 @@ cLabel* labelMessage;
 // a label to display the values of the variables of the simulation
 cLabel* labelInfo;
 
+// a label to display "game over"
+cLabel* labelGameOver;
+
 // indicates if the haptic simulation currently running
 bool simulationRunning = false;
 
@@ -180,6 +186,15 @@ int windowW;
 int windowH;
 int windowPosX;
 int windowPosY;
+
+//information about the ATB bar
+int barSizeW;
+int barSizeH;
+int barPosX;
+int barPosY;
+string barPos;
+string barSize;
+string barDef;
 
 // root resource path
 string resourceRoot;
@@ -441,11 +456,15 @@ int main(int argc, char* argv[])
 	//--------------------------------------------------------------------------
 
 	// create a bar
-	bar1 = TwNewBar("Bonjour le monde");
+	bar1 = TwNewBar("Bonjour");
 
-	// add a variable
-	TwAddVarRW(bar1, "Charge", TW_TYPE_FLOAT, &SPHERE_CHARGE, "");
+	// define parameters of the bar
+	TwDefine(" Bonjour refresh=0.1 ");
 
+	// add variables
+	TwAddVarRW(bar1, "Charge", TW_TYPE_DOUBLE, &SPHERE_CHARGE, "");
+	TwAddVarRW(bar1, "Vitesse", TW_TYPE_DIR3F, &SPHERE_SPEED, " opened=true ");
+	
 	//--------------------------------------------------------------------------
 	// WIDGETS
 	//--------------------------------------------------------------------------
@@ -467,6 +486,11 @@ int main(int argc, char* argv[])
 	labelInfo = new cLabel(font);
 	labelInfo->m_fontColor.setRed();
 	camera->m_frontLayer->addChild(labelInfo);
+
+	// create a label to display "game over"
+	labelGameOver = new cLabel(font);
+	labelGameOver->m_fontColor.setRed();
+	camera->m_frontLayer->addChild(labelGameOver);
 
 	/*
 	// create a background
@@ -677,11 +701,13 @@ void keySelect(unsigned char key, int x, int y)
 		if (selection.compare("charge") == 0)
 		{
 			sphere->setCharge(sphere->getCharge() + 0.5);
+			SPHERE_CHARGE += 0.5;
 		}
 
 		if (selection.compare("mass") == 0)
 		{
 			sphere->setMass(sphere->getMass() + 0.01);
+			SPHERE_MASS += 0.01;
 		}
 
 		if (selection.compare("intensity") == 0)
@@ -701,11 +727,13 @@ void keySelect(unsigned char key, int x, int y)
 		if (selection.compare("charge") == 0)
 		{
 			sphere->setCharge(sphere->getCharge() - 0.5);
+			SPHERE_CHARGE -= 0.5;
 		}
 
 		if (selection.compare("mass") == 0)
 		{
 			sphere->setMass(sphere->getMass() - 0.01);
+			SPHERE_MASS -= 0.01;
 		}
 
 		if (selection.compare("intensity") == 0)
@@ -724,6 +752,9 @@ void close(void)
 
 	// wait for graphics and haptics loops to terminate
 	while (!simulationFinished) { cSleepMs(100); }
+
+	//uninitialize AntTweakBar
+	TwTerminate();
 }
 
 //------------------------------------------------------------------------------
@@ -760,6 +791,14 @@ void updateGraphics(void)
 	// update position of message label
 	labelMessage->setLocalPos((int)(0.5 * (windowW - labelMessage->getWidth())), 50);
 
+	// update position of "game over" label
+	labelGameOver->setLocalPos((int)(0.5 * (windowW - labelGameOver->getWidth())), 30);
+	if (SPHERE_CHARGE >= 2.0) {
+		labelGameOver->setText("GAME OVER");
+	}
+	else {
+		labelGameOver->setText(" ");
+	}
 
 	/////////////////////////////////////////////////////////////////////
 	// RENDER SCENE
@@ -769,9 +808,21 @@ void updateGraphics(void)
 	world->updateShadowMaps(false, mirroredDisplay);
 	
 	// render world
-	camera->renderView(windowW*0.7, windowH);
+	camera->renderView(windowW*0.7, windowH*0.8);
+
+	// telling AntTweakBar the size of the graphic window
+	TwWindowSize(windowW, windowH);
 
 	// display bars
+	barPosX = windowW*0.7;
+	barPosY = windowH*0.1;
+	barSizeW = windowW*0.2;
+	barSizeH = windowH*0.6;
+	barPos = to_string(barPosX)+" "+ to_string(barPosY);
+	barSize = to_string(barSizeW) + " " + to_string(barSizeH);
+	barDef = " Bonjour position='" + barPos + "' size='" + barSize+"'";
+	const char *pbarDef = barDef.c_str();
+	TwDefine(pbarDef);
 	TwDraw();
 
 	// swap buffers
@@ -928,6 +979,9 @@ void updateHaptics(void)
 		// compute velocity
 		cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());
 		sphere->setSpeed(newVel);
+		SPHERE_SPEED[2] = (float) ((sphere->getSpeed()).x());
+		SPHERE_SPEED[0] = (float) ((sphere->getSpeed()).y());
+		SPHERE_SPEED[1] = (float) ((sphere->getSpeed()).z());
 
 		// compute position
 		cVector3d spherePos = position + timeInterval * sphere->getSpeed() + cSqr(timeInterval) * sphere->getAcceleration();
@@ -966,7 +1020,7 @@ void updateHaptics(void)
 
 		hapticDevice->setForce(forceToApply);
 
-
+		
 	}
 
 	// register data to be print into a text file

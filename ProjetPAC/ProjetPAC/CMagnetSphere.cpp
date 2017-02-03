@@ -11,3 +11,8 @@ chai3d::cMagnetSphere::cMagnetSphere(double radius, double mass, double charge, 
 	setAcceleration(0.0, 0.0, 0.0);
 }
 
+double* chai3d::cMagnetSphere::getSpeed3()
+{
+	double vitesse[3] = { (this->speed).x(), (this->speed).y(), (this->speed).z() };
+	return vitesse;
+}

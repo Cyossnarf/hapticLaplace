@@ -28,6 +28,7 @@ namespace chai3d {
 		inline void setSpeed(const cVector3d &sp) { speed = sp; }
 		inline void setSpeed(double x, double y, double z) { setSpeed(cVector3d(x, y, z)); }
 		inline cVector3d getSpeed() const { return speed; }
+		double* getSpeed3();
 
 	private:
 
