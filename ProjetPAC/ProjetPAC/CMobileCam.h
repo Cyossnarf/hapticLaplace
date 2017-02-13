@@ -17,11 +17,12 @@ namespace chai3d {
 		
 		void moveCam();
 
+		inline cMatrix3d getRotation() const { return rotation; }
+		inline int getState() const { return state; }
+
 	private:
 
-		cVector3d eye;
-		cVector3d target;
-		cVector3d up;
+		cMatrix3d rotation;
 		bool inMovement;
 		int step;
 		int state;

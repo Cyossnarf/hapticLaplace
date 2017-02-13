@@ -116,9 +116,6 @@ double SPHERE_MASS = 0.04;
 // charge of the sphere (can be modified during the simulation)
 double SPHERE_CHARGE = 1.0;
 
-// speed vector of the sphere (can be modified during the simulation)
-float SPHERE_SPEED[3] = { 0.1f, 0.2f, 0.0f };//double *SPHERE_SPEED;
-
 // damping of the sphere
 const double SPHERE_DAMPING = 0.999;
 
@@ -187,7 +184,7 @@ int windowH;
 int windowPosX;
 int windowPosY;
 
-//information about the ATB bar
+// information about the ATB bar
 int barSizeW;
 int barSizeH;
 int barPosX;
@@ -210,6 +207,21 @@ double userMovex(0.0);
 double userMovey(0.0);
 double userMovez(0.0);
 
+// Ce qui suit sont des pointeurs utiles pour l'affichage du GUI
+// C'est un peu bizarre parce qu'on devrait logiquement appeler des attributs des objets magnetsphere et magnetfield
+// Mais le code n'a pas été adapté pour ça...
+
+// speed vector of the sphere
+float SPHERE_SPEED[3] = { 0.0f, 0.0f, 0.0f };//double *SPHERE_SPEED;
+cVector3d sphere_speed;
+
+// magnetic force applied to the sphere
+float SPHERE_FORCE[3] = { 0.0f, 0.0f, 0.0f };
+cVector3d sphere_force;
+
+// magnetic field's orientation
+float MAGN_FIELD[3] = { 0.0f, 0.0f, 1.0f };
+cVector3d magn_field;
 
 
 //------------------------------------------------------------------------------
@@ -463,8 +475,10 @@ int main(int argc, char* argv[])
 
 	// add variables
 	TwAddVarRW(bar1, "Charge", TW_TYPE_DOUBLE, &SPHERE_CHARGE, "");
-	TwAddVarRW(bar1, "Vitesse", TW_TYPE_DIR3F, &SPHERE_SPEED, " opened=true ");
-	
+	TwAddVarRW(bar1, "Champ magnétique", TW_TYPE_DIR3F, &MAGN_FIELD, " opened=true showval=false arrowcolor='0 0 255' ");
+	TwAddVarRW(bar1, "Vitesse", TW_TYPE_DIR3F, &SPHERE_SPEED, " opened=true showval=false arrowcolor='0 255 0' ");
+	TwAddVarRW(bar1, "Force magnétique", TW_TYPE_DIR3F, &SPHERE_FORCE, " opened=true showval=false arrowcolor='255 0 0' ");
+
 	//--------------------------------------------------------------------------
 	// WIDGETS
 	//--------------------------------------------------------------------------
@@ -778,6 +792,26 @@ void updateGraphics(void)
 		camera->moveCam();
 	}
 
+	if (camera->isInMovement() || camera->getState() != 1)
+	{
+		sphere_force = camera->getRotation() * sphere_force;
+		sphere_speed = camera->getRotation() * sphere_speed;
+		magn_field = camera->getRotation() * cVector3d(1.0, 0.0, 0.0);
+		//printf((magn_field.str() + "\n").c_str());//debug
+
+		MAGN_FIELD[2] = (float)(magn_field.x());
+		MAGN_FIELD[0] = (float)(magn_field.y());
+		MAGN_FIELD[1] = (float)(magn_field.z());
+	}
+
+	SPHERE_SPEED[2] = (float)(sphere_speed.x());
+	SPHERE_SPEED[0] = (float)(sphere_speed.y());
+	SPHERE_SPEED[1] = (float)(sphere_speed.z());
+
+	SPHERE_FORCE[2] = (float)(sphere_force.x());
+	SPHERE_FORCE[0] = (float)(sphere_force.y());
+	SPHERE_FORCE[1] = (float)(sphere_force.z());
+
 	/////////////////////////////////////////////////////////////////////
 	// UPDATE WIDGETS
 	/////////////////////////////////////////////////////////////////////
@@ -945,6 +979,7 @@ void updateHaptics(void)
 		{
 			// compute magnetic forces
 			sphereFce.add(magnetField->magnetForce(*sphere, sphere->getCharge(), sphere->getSpeed()));
+			
 			/*
 			// update the trust to give to the user counter force 
 			if (hapticDeviceConnected && (devicePos - deviceTargetPos).length() > 0.015)
@@ -973,15 +1008,15 @@ void updateHaptics(void)
 		loop = 0;
 		}*/
 
+		sphere_force = sphereFce;//fusionner les 2 vars?
+
 		// compute acceleration
 		sphere->setAcceleration(sphereFce / sphere->getMass());//((sphereFce + userForce) / sphere->getMass());
 
 		// compute velocity
 		cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());
 		sphere->setSpeed(newVel);
-		SPHERE_SPEED[2] = (float) ((sphere->getSpeed()).x());
-		SPHERE_SPEED[0] = (float) ((sphere->getSpeed()).y());
-		SPHERE_SPEED[1] = (float) ((sphere->getSpeed()).z());
+		sphere_speed = sphere->getSpeed();
 
 		// compute position
 		cVector3d spherePos = position + timeInterval * sphere->getSpeed() + cSqr(timeInterval) * sphere->getAcceleration();
