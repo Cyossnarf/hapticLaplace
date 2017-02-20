@@ -26,11 +26,11 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 	setLocalPos(currentPos);
 
 	// set the appearance of the first turn
-	cTexture2dPtr turnTexture = cTexture2d::create();
-	turnTexture->loadFromFile("../resources/images/magnet-color.png");
+	//cTexture2dPtr turnTexture = cTexture2d::create();
+	//turnTexture->loadFromFile("../resources/images/magnet-color.png");
 
-	setTexture(turnTexture);
-	setUseTexture(true);
+	//setTexture(turnTexture);
+	//setUseTexture(true);
 	/*
 	// create the rest of the turns	(18 en 2015)
 	for (int i = 0; i < 2; i++) {

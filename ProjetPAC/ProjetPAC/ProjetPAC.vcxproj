@@ -19,12 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CArrow.cpp" />
     <ClCompile Include="CMobileCam.cpp" />
     <ClCompile Include="CMagnetField.cpp" />
     <ClCompile Include="CMagnetSphere.cpp" />
     <ClCompile Include="mainIB.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CArrow.h" />
     <ClInclude Include="CMobileCam.h" />
     <ClInclude Include="CMagnetField.h" />
     <ClInclude Include="CMagnetSphere.h" />

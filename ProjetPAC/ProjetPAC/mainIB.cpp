@@ -47,6 +47,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "CMagnetSphere.h"
 //#include "CCircle.h"
 #include "CMobileCam.h"
+#include "CArrow.h"
 #include "AntTweakBar.h"
 #include <cstdlib>
 #include <ctime>
@@ -151,6 +152,11 @@ cMagnetSphere *sphere;
 
 // magnetic field
 cMagnetField *magnetField;
+
+// visual representation of the magnetic field vector
+cArrow *magnetFieldVector;
+// visual representation of the sphere speed vector
+cArrow *speedVector;
 
 // circle to be drawn around the magnet field
 //cCircle *circle;
@@ -439,7 +445,7 @@ int main(int argc, char* argv[])
 
 
 	//--------------------------------------------------------------------------
-	// CREATE SPHERE AND FIELD
+	// CREATE SPHERE AND FIELD (AND ARROWS)
 	//--------------------------------------------------------------------------
 
 	// create the sphere
@@ -462,6 +468,14 @@ int main(int argc, char* argv[])
 
 	// set position of the magnetic field
 	magnetField->setLocalPos(-magnetField->getLength(), 0.0, 0.0);//(0.0, 0.05, 0.01);
+
+	//create an arrow
+	magnetFieldVector = new cArrow(cVector3d(-0.35, 0.0, 0.0), 0.01, 0.02, 0.3);
+	speedVector = new cArrow(cVector3d(0.0, -0.23, 0.0), 0.002, 0.004, 0.03);
+
+	//add the arrow to the world
+	world->addChild(magnetFieldVector);
+	world->addChild(speedVector);
 
 	//--------------------------------------------------------------------------
 	// BARS
@@ -787,6 +801,10 @@ void graphicsTimer(int data)
 
 void updateGraphics(void)
 {
+	/////////////////////////////////////////////////////////////////////
+	// UPDATE PURELY GRAPHICAL ELEMENTS
+	/////////////////////////////////////////////////////////////////////
+
 	if (camera->isInMovement())
 	{
 		camera->moveCam();
@@ -811,6 +829,8 @@ void updateGraphics(void)
 	SPHERE_FORCE[2] = (float)(sphere_force.x());
 	SPHERE_FORCE[0] = (float)(sphere_force.y());
 	SPHERE_FORCE[1] = (float)(sphere_force.z());
+
+	speedVector->setLocalPos(sphere->getLocalPos());
 
 	/////////////////////////////////////////////////////////////////////
 	// UPDATE WIDGETS
