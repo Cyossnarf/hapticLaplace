@@ -60,8 +60,8 @@ void chai3d::cMobileCam::moveCam()
 /*!
 This method renders the scene viewed by the camera.
 
-\param  a_windowWidth     Width of viewport.
-\param  a_windowHeight    Height of viewport.
+\param  a_VPWidth     Width of viewport.
+\param  a_VPHeight    Height of viewport.
 \param  a_displayContext  Current display context.
 \param  a_eyeMode         When using stereo mode C_STEREO_PASSIVE_DUAL_DISPLAY,
 specifies which eye view to render.
@@ -71,10 +71,12 @@ in a framebuffer (cFrameBuffer) that will have been
 previously setup.
 */
 //==============================================================================
-void chai3d::cMobileCam::renderView_custom(const int a_windowWidth,
+void chai3d::cMobileCam::renderView_custom(const int a_VPx,
+	const int a_VPy,
+	const int a_VPWidth,
+	const int a_VPHeight,
+	const int a_windowWidth,
 	const int a_windowHeight,
-	const int a_worldVPWidth,
-	const int a_worldVPHeight,
 	const int a_displayContext,
 	const cEyeMode a_eyeMode,
 	const bool a_defaultBuffer)
@@ -101,14 +103,14 @@ void chai3d::cMobileCam::renderView_custom(const int a_windowWidth,
 	//-----------------------------------------------------------------------
 
 	// check window size
-	if (a_windowHeight == 0) { return; }
+	if (a_VPHeight == 0) { return; }
 
 	// store most recent size of display
-	m_lastDisplayWidth = a_windowWidth;
-	m_lastDisplayHeight = a_windowHeight;
+	m_lastDisplayWidth = a_VPWidth;
+	m_lastDisplayHeight = a_VPHeight;
 
 	// compute aspect ratio
-	double glAspect = ((double)a_windowWidth / (double)a_windowHeight);
+	double glAspect = ((double)a_VPWidth / (double)a_VPHeight);
 
 	// compute global pose
 	computeGlobalPositionsFromRoot(true);
@@ -198,13 +200,13 @@ void chai3d::cMobileCam::renderView_custom(const int a_windowWidth,
 				switch (m_stereoMode)
 				{
 				case C_STEREO_ACTIVE:
-					glViewport(0, 0, a_windowWidth, a_windowHeight);
+					glViewport(0, 0, a_VPWidth, a_VPHeight);
 					glDrawBuffer(GL_BACK_LEFT);
 					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 					break;
 
 				case C_STEREO_PASSIVE_LEFT_RIGHT:
-					glViewport(0, 0, a_windowWidth / 2, a_windowHeight);
+					glViewport(0, 0, a_VPWidth / 2, a_VPHeight);
 					if (a_defaultBuffer)
 						glDrawBuffer(GL_BACK);
 					else
@@ -213,7 +215,7 @@ void chai3d::cMobileCam::renderView_custom(const int a_windowWidth,
 					break;
 
 				case C_STEREO_PASSIVE_TOP_BOTTOM:
-					glViewport(0, a_windowHeight / 2, a_windowWidth, a_windowHeight / 2);
+					glViewport(0, a_VPHeight / 2, a_VPWidth, a_VPHeight / 2);
 					if (a_defaultBuffer)
 						glDrawBuffer(GL_BACK);
 					else
@@ -241,11 +243,11 @@ void chai3d::cMobileCam::renderView_custom(const int a_windowWidth,
 					break;
 
 				case C_STEREO_PASSIVE_LEFT_RIGHT:
-					glViewport(a_windowWidth / 2, 0, a_windowWidth / 2, a_windowHeight);
+					glViewport(a_VPWidth / 2, 0, a_VPWidth / 2, a_VPHeight);
 					break;
 
 				case C_STEREO_PASSIVE_TOP_BOTTOM:
-					glViewport(0, 0, a_windowWidth, a_windowHeight / 2);
+					glViewport(0, 0, a_VPWidth, a_VPHeight / 2);
 					break;
 
 				default: break;
@@ -257,7 +259,7 @@ void chai3d::cMobileCam::renderView_custom(const int a_windowWidth,
 		}
 		else
 		{
-			glViewport(0, 0, a_windowWidth, a_windowHeight);
+			glViewport(a_VPx, a_VPy, a_VPWidth, a_VPHeight);
 
 			if (a_defaultBuffer)
 				glDrawBuffer(GL_BACK);
@@ -286,8 +288,8 @@ void chai3d::cMobileCam::renderView_custom(const int a_windowWidth,
 		if (m_backLayer->getNumChildren())
 		{
 			renderLayer(m_backLayer,
-				a_windowWidth,
-				a_windowHeight,
+				a_VPWidth,
+				a_VPHeight,
 				a_displayContext);
 		}
 
@@ -775,15 +777,15 @@ void chai3d::cMobileCam::renderView_custom(const int a_windowWidth,
 		// clear depth buffer
 		glClear(GL_DEPTH_BUFFER_BIT);
 
-		glViewport(0, 0, a_worldVPWidth, a_worldVPHeight);//marqueur
+		glViewport(0, 0, a_windowWidth, a_windowHeight);//marqueur
 
 		// render the 'front' 2d object layer; it will set up its own
 		// projection matrix
 		if (m_frontLayer->getNumChildren() > 0)
 		{
 			renderLayer(m_frontLayer,
-				1366,//a_windowWidth,//marqueur
-				768,//a_windowHeight,
+				a_windowWidth,//marqueur
+				a_windowHeight,
 				a_displayContext);
 		}
 

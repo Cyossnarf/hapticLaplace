@@ -123,8 +123,10 @@ const double SPHERE_DAMPING = 0.999;
 // stiffness of the haptic device
 const double HAPTIC_STIFFNESS = 1000.0;
 
-// color of the GUI panels
-const cColorf panelColor = cColorf(125/255, 117/255, 164/255);
+// colors
+const cColorf panelColor = cColorf(52 / 255.f, 48 / 255.f, 71 / 255.f);
+const cColorf backgroundColor = cColorf(125 / 255.f, 117 / 255.f, 164 / 255.f);
+
 
 
 //------------------------------------------------------------------------------
@@ -167,14 +169,12 @@ cArrow *speedVector;
 // a bar to display info
 TwBar *bar1;
 
-// a label to explain what is happening
-cLabel* labelMessage;
-
 // a label to display the values of the variables of the simulation
 cLabel* labelInfo;
 
-// a panel for the GUI
+// panels for the GUI
 cPanel* pan1;
+//cPanel* pan2;
 
 // indicates if the haptic simulation currently running
 bool simulationRunning = false;
@@ -370,7 +370,7 @@ int main(int argc, char* argv[])
 	world = new cWorld();
 
 	// set the background color of the environment
-	world->m_backgroundColor.setWhite();
+	world->m_backgroundColor = backgroundColor;
 
 	// create a camera and insert it into the virtual world
 	camera = new cMobileCam(world);
@@ -503,26 +503,19 @@ int main(int argc, char* argv[])
 	// create a font
 	cFont *font = NEW_CFONTCALIBRI20();
 
-	// create a label with a small message
-	labelMessage = new cLabel(font);
-	camera->m_frontLayer->addChild(labelMessage);
-
-	// set font color
-	labelMessage->m_fontColor.setBlack();
-
-	// set text message
-	labelMessage->setText("move a charge into a magnetic field");
-
 	// create a label to display variable values of the simulation
 	labelInfo = new cLabel(font);
 	labelInfo->m_fontColor.setRed();
 	camera->m_frontLayer->addChild(labelInfo);
 
-	// create a panel for the GUI
+	// create panels for the GUI
 	pan1 = new cPanel();
 	pan1->setColor(panelColor);
-	camera->m_frontLayer->addChild(pan1);
+	camera->m_backLayer->addChild(pan1);
 
+	//pan2 = new cPanel();
+	//pan2->setColor(panelColor);
+	//camera->m_frontLayer->addChild(pan2);
 	/*
 	// create a background
 	cBackground* background = new cBackground();
@@ -845,14 +838,14 @@ void updateGraphics(void)
 	// update position of info label
 	labelInfo->setLocalPos((int)(0.5 * (windowW - labelInfo->getWidth())), 15);
 
-	// update position of message label
-	labelMessage->setLocalPos((int)(0.5 * (windowW - labelMessage->getWidth())), 50);
+	// set width and height of panels
+	pan1->setSize(windowW * 0.7, windowH * 0.8);
+	pan1->setCornerRadius(0, (int)(windowH * 0.1), (int)(windowH * 0.1), 0);
+	//pan2->setSize(windowW, (int)(0.2 * windowH));
 
-	// set width and height of panel pan1
-	pan1->setSize((int)(0.3 * windowW), windowH);
-
-	// assign a position (x,y) to panel pan1
-	pan1->setLocalPos((int)(0.7 * windowW), 0);
+	// assign a position (x,y) to panels
+	pan1->setLocalPos(0, 0);
+	//pan2->setLocalPos(0, (int)(0.8 * windowH));
 
 	/////////////////////////////////////////////////////////////////////
 	// RENDER SCENE
@@ -862,14 +855,19 @@ void updateGraphics(void)
 	world->updateShadowMaps(false, mirroredDisplay);
 	
 	// render world
-	camera->renderView_custom(windowW * 0.7, windowH * 0.8, windowW, windowH);
+	camera->renderView_custom((int)(windowW * 0.05),
+		(int)(windowH *0.05),
+		(int)(windowW * 0.7),
+		(int)(windowH * 0.8),
+		windowW,
+		windowH);
 
 	// telling AntTweakBar the size of the graphic window
 	TwWindowSize(windowW, windowH);
 
 	// display bars
-	barPosX = windowW*0.7;
-	barPosY = windowH*0.1;
+	barPosX = windowW*0.775;
+	barPosY = windowH*0.2;
 	barSizeW = windowW*0.2;
 	barSizeH = windowH*0.6;
 	barPos = to_string(barPosX)+" "+ to_string(barPosY);

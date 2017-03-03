@@ -16,11 +16,14 @@ namespace chai3d {
 		inline bool isInMovement() const { return inMovement; }
 		
 		void moveCam();
+
 		//! This method renders the the camera view in OpenGL
-		virtual void renderView_custom(const int a_windowWidth,
+		virtual void renderView_custom(const int a_VPx,
+			const int a_VPy,
+			const int a_VPWidth,
+			const int a_VPHeight,
+			const int a_windowWidth,
 			const int a_windowHeight,
-			const int a_worldVPWidth,
-			const int a_worldVPHeight,
 			const int a_displayContext = 0,
 			const cEyeMode a_eyeMode = C_STEREO_LEFT_EYE,
 			const bool a_defaultBuffer = true);
