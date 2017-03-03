@@ -123,6 +123,9 @@ const double SPHERE_DAMPING = 0.999;
 // stiffness of the haptic device
 const double HAPTIC_STIFFNESS = 1000.0;
 
+// color of the GUI panels
+const cColorf panelColor = cColorf(125/255, 117/255, 164/255);
+
 
 //------------------------------------------------------------------------------
 // DECLARED VARIABLES
@@ -170,8 +173,8 @@ cLabel* labelMessage;
 // a label to display the values of the variables of the simulation
 cLabel* labelInfo;
 
-// a label to display "game over"
-cLabel* labelGameOver;
+// a panel for the GUI
+cPanel* pan1;
 
 // indicates if the haptic simulation currently running
 bool simulationRunning = false;
@@ -515,10 +518,10 @@ int main(int argc, char* argv[])
 	labelInfo->m_fontColor.setRed();
 	camera->m_frontLayer->addChild(labelInfo);
 
-	// create a label to display "game over"
-	labelGameOver = new cLabel(font);
-	labelGameOver->m_fontColor.setRed();
-	camera->m_frontLayer->addChild(labelGameOver);
+	// create a panel for the GUI
+	pan1 = new cPanel();
+	pan1->setColor(panelColor);
+	camera->m_frontLayer->addChild(pan1);
 
 	/*
 	// create a background
@@ -845,14 +848,11 @@ void updateGraphics(void)
 	// update position of message label
 	labelMessage->setLocalPos((int)(0.5 * (windowW - labelMessage->getWidth())), 50);
 
-	// update position of "game over" label
-	labelGameOver->setLocalPos((int)(0.5 * (windowW - labelGameOver->getWidth())), 30);
-	if (SPHERE_CHARGE >= 2.0) {
-		labelGameOver->setText("GAME OVER");
-	}
-	else {
-		labelGameOver->setText(" ");
-	}
+	// set width and height of panel pan1
+	pan1->setSize((int)(0.3 * windowW), windowH);
+
+	// assign a position (x,y) to panel pan1
+	pan1->setLocalPos((int)(0.7 * windowW), 0);
 
 	/////////////////////////////////////////////////////////////////////
 	// RENDER SCENE
@@ -862,7 +862,7 @@ void updateGraphics(void)
 	world->updateShadowMaps(false, mirroredDisplay);
 	
 	// render world
-	camera->renderView(windowW*0.7, windowH*0.8);
+	camera->renderView_custom(windowW * 0.7, windowH * 0.8, windowW, windowH);
 
 	// telling AntTweakBar the size of the graphic window
 	TwWindowSize(windowW, windowH);
