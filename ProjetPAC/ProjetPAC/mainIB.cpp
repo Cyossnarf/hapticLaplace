@@ -124,8 +124,8 @@ const double SPHERE_DAMPING = 0.999;
 const double HAPTIC_STIFFNESS = 1000.0;
 
 // colors
-const cColorf panelColor = cColorf(52 / 255.f, 48 / 255.f, 71 / 255.f);
-const cColorf backgroundColor = cColorf(125 / 255.f, 117 / 255.f, 164 / 255.f);
+const cColorf backgroundColor = cColorf(52 / 255.f, 48 / 255.f, 71 / 255.f);
+const cColorf panelColor = cColorf(125 / 255.f, 117 / 255.f, 164 / 255.f);
 
 
 
@@ -174,7 +174,7 @@ cLabel* labelInfo;
 
 // panels for the GUI
 cPanel* pan1;
-//cPanel* pan2;
+cPanel* pan2;
 
 // indicates if the haptic simulation currently running
 bool simulationRunning = false;
@@ -308,6 +308,9 @@ int main(int argc, char* argv[])
 	cout << "[ESC] - Exit application" << endl;
 	cout << endl << endl;
 
+	// parse first arg to try and locate resources
+	resourceRoot = string(argv[0]).substr(0, string(argv[0]).find_last_of("/\\") + 1);
+
 
 	//--------------------------------------------------------------------------
 	// OPEN GL - WINDOW DISPLAY
@@ -370,7 +373,7 @@ int main(int argc, char* argv[])
 	world = new cWorld();
 
 	// set the background color of the environment
-	world->m_backgroundColor = backgroundColor;
+	//world->m_backgroundColor = backgroundColor;
 
 	// create a camera and insert it into the virtual world
 	camera = new cMobileCam(world);
@@ -491,7 +494,7 @@ int main(int argc, char* argv[])
 	TwDefine(" Bonjour refresh=0.1 ");
 
 	// add variables
-	TwAddVarRW(bar1, "Charge", TW_TYPE_DOUBLE, &SPHERE_CHARGE, "");
+	//TwAddVarRW(bar1, "Charge", TW_TYPE_DOUBLE, &SPHERE_CHARGE, "");
 	TwAddVarRW(bar1, "Champ magnétique", TW_TYPE_DIR3F, &MAGN_FIELD, " opened=true showval=false arrowcolor='0 0 255' ");
 	TwAddVarRW(bar1, "Vitesse", TW_TYPE_DIR3F, &SPHERE_SPEED, " opened=true showval=false arrowcolor='0 255 0' ");
 	TwAddVarRW(bar1, "Force magnétique", TW_TYPE_DIR3F, &SPHERE_FORCE, " opened=true showval=false arrowcolor='255 0 0' ");
@@ -507,16 +510,7 @@ int main(int argc, char* argv[])
 	labelInfo = new cLabel(font);
 	labelInfo->m_fontColor.setRed();
 	camera->m_frontLayer->addChild(labelInfo);
-
-	// create panels for the GUI
-	pan1 = new cPanel();
-	pan1->setColor(panelColor);
-	camera->m_backLayer->addChild(pan1);
-
-	//pan2 = new cPanel();
-	//pan2->setColor(panelColor);
-	//camera->m_frontLayer->addChild(pan2);
-	/*
+	
 	// create a background
 	cBackground* background = new cBackground();
 	camera->m_backLayer->addChild(background);
@@ -535,10 +529,21 @@ int main(int argc, char* argv[])
 	if (!fileload)
 	{
 		cout << "Error - Image failed to load correctly." << endl;
+		//printf(RESOURCE_PATH("../resources/images/spheremap-1.jpg"));
 		close();
 		return (-1);
 	}
-	*/
+	
+	// create panels for the GUI
+	pan1 = new cPanel();
+	pan1->setColor(backgroundColor);
+	camera->m_backLayer->addChild(pan1);
+
+	pan2 = new cPanel();
+	pan2->setColor(panelColor);
+	pan2->setTransparencyLevel(0.5f);
+	camera->m_frontLayer->addChild(pan2);
+
 
 	//--------------------------------------------------------------------------
 	// START SIMULATION
@@ -836,16 +841,16 @@ void updateGraphics(void)
 	labelInfo->setText("field opacity : " + cStr(magnetField->getTransparency() * 100) + "% | sphere mass : " + cStr(sphere->getMass()) + " kg | sphere charge : " + cStr(sphere->getCharge()) + " C | current intensity : " + cStr(magnetField->getCurrentIntensity()) + " A");
 
 	// update position of info label
-	labelInfo->setLocalPos((int)(0.5 * (windowW - labelInfo->getWidth())), 15);
+	labelInfo->setLocalPos(0.5 * (windowW - labelInfo->getWidth()), 15);
 
 	// set width and height of panels
 	pan1->setSize(windowW * 0.7, windowH * 0.8);
-	pan1->setCornerRadius(0, (int)(windowH * 0.1), (int)(windowH * 0.1), 0);
-	//pan2->setSize(windowW, (int)(0.2 * windowH));
+	pan1->setCornerRadius(0, windowH * 0.1, windowH * 0.1, 0);
+	pan2->setSize(windowW * 0.2, windowH);
 
 	// assign a position (x,y) to panels
-	pan1->setLocalPos(0, 0);
-	//pan2->setLocalPos(0, (int)(0.8 * windowH));
+	pan1->setLocalPos(windowW * 0.05, windowH * 0.05);
+	pan2->setLocalPos(windowW * 0.775, 0);
 
 	/////////////////////////////////////////////////////////////////////
 	// RENDER SCENE
@@ -866,10 +871,10 @@ void updateGraphics(void)
 	TwWindowSize(windowW, windowH);
 
 	// display bars
-	barPosX = windowW*0.775;
-	barPosY = windowH*0.2;
+	barPosX = windowW*0.775 + 1;
+	barPosY = windowH*0.6;
 	barSizeW = windowW*0.2;
-	barSizeH = windowH*0.6;
+	barSizeH = windowH*0.4;
 	barPos = to_string(barPosX)+" "+ to_string(barPosY);
 	barSize = to_string(barSizeW) + " " + to_string(barSizeH);
 	barDef = " Bonjour position='" + barPos + "' size='" + barSize+"'";

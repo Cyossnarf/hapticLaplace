@@ -106,8 +106,8 @@ void chai3d::cMobileCam::renderView_custom(const int a_VPx,
 	if (a_VPHeight == 0) { return; }
 
 	// store most recent size of display
-	m_lastDisplayWidth = a_VPWidth;
-	m_lastDisplayHeight = a_VPHeight;
+	m_lastDisplayWidth = a_windowWidth;
+	m_lastDisplayHeight = a_windowHeight;
 
 	// compute aspect ratio
 	double glAspect = ((double)a_VPWidth / (double)a_VPHeight);
@@ -285,16 +285,20 @@ void chai3d::cMobileCam::renderView_custom(const int a_VPx,
 
 		// render the 2D backlayer
 		// it will set up its own projection matrix
+		glViewport(0, 0, a_windowWidth, a_windowHeight);//marqueur
+
 		if (m_backLayer->getNumChildren())
 		{
 			renderLayer(m_backLayer,
-				a_VPWidth,
-				a_VPHeight,
+				a_windowWidth,//marqueur
+				a_windowHeight,
 				a_displayContext);
 		}
 
 		// clear depth buffer
 		glClear(GL_DEPTH_BUFFER_BIT);
+
+		glViewport(a_VPx, a_VPy, a_VPWidth, a_VPHeight);//marqueur
 
 		//-------------------------------------------------------------------
 		// (4.4a) SETUP CAMERA  (MONO RENDERING)

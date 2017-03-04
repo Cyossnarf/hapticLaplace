@@ -31,11 +31,6 @@ namespace chai3d {
 		inline cMatrix3d getRotation() const { return rotation; }
 		inline int getState() const { return state; }
 
-	protected:
-
-		//! Renders a 2D layer within this camera's view.
-		void renderLayer_custom(cGenericObject* a_graph, int a_width, int a_height, int a_displayContext);
-
 	private:
 
 		cMatrix3d rotation;
