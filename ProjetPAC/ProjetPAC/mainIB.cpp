@@ -48,6 +48,7 @@ POSSIBILITY OF SUCH DAMAGE.
 //#include "CCircle.h"
 #include "CMobileCam.h"
 #include "CArrow.h"
+#include "CGauge.h"
 #include "AntTweakBar.h"
 #include <cstdlib>
 #include <ctime>
@@ -86,7 +87,7 @@ cStereoMode stereoMode = C_STEREO_DISABLED;
 bool hapticDeviceConnected = false;
 
 // fullscreen mode
-bool fullscreen = false;
+bool fullscreen = true;
 
 // mirrored display
 bool mirroredDisplay = false;
@@ -175,6 +176,11 @@ cLabel* labelInfo;
 // panels for the GUI
 cPanel* pan1;
 cPanel* pan2;
+
+// gauges to graphically represent variable values of the simulation
+cGauge* masseGauge;
+cGauge* chargeGauge;
+cGauge* intensiteGauge;
 
 // indicates if the haptic simulation currently running
 bool simulationRunning = false;
@@ -544,6 +550,19 @@ int main(int argc, char* argv[])
 	pan2->setTransparencyLevel(0.5f);
 	camera->m_frontLayer->addChild(pan2);
 
+	// create gauges to graphically represent variable values of the simulation
+	masseGauge = new cGauge(font, "Masse de la particule", 0);
+	masseGauge->setColor(panelColor);
+	pan2->addChild(masseGauge);
+
+	chargeGauge = new cGauge(font, "Charge de la particule", 1);
+	chargeGauge->setColor(panelColor);
+	pan2->addChild(chargeGauge);
+
+	intensiteGauge = new cGauge(font, "Intensite du champ magnetique", 2);
+	intensiteGauge->setColor(panelColor);
+	pan2->addChild(intensiteGauge);
+
 
 	//--------------------------------------------------------------------------
 	// START SIMULATION
@@ -852,6 +871,11 @@ void updateGraphics(void)
 	pan1->setLocalPos(windowW * 0.05, windowH * 0.05);
 	pan2->setLocalPos(windowW * 0.775, 0);
 
+	// update positions and dimensions of gauges
+	masseGauge->update(windowW * 0.2, windowH, windowH * 0.4, 3);
+	chargeGauge->update(windowW * 0.2, windowH, windowH * 0.4, 3);
+	intensiteGauge->update(windowW * 0.2, windowH, windowH * 0.4, 3);
+
 	/////////////////////////////////////////////////////////////////////
 	// RENDER SCENE
 	/////////////////////////////////////////////////////////////////////
@@ -871,7 +895,7 @@ void updateGraphics(void)
 	TwWindowSize(windowW, windowH);
 
 	// display bars
-	barPosX = windowW*0.775 + 1;
+	barPosX = windowW*0.775;
 	barPosY = windowH*0.6;
 	barSizeW = windowW*0.2;
 	barSizeH = windowH*0.4;
