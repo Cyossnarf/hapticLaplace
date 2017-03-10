@@ -3,6 +3,7 @@
 
 #include "widgets/CPanel.h"
 #include "graphics/CFont.h"
+#include "widgets/CBitmap.h"
 
 namespace chai3d {
 
@@ -11,7 +12,7 @@ namespace chai3d {
 
 	public:
 
-		cGauge(cFont* a_font, const std::string a_text, const int a_id);
+		cGauge(cFont* a_font, const std::string a_text, cBitmap* a_icon, const int a_id, cBitmap* a_icon2 = nullptr);
 
 		void update(const double a_frameWidth,
 			const double a_upBoundary,
@@ -20,7 +21,9 @@ namespace chai3d {
 
 	private:
 
-		int id;
+		int m_id;
+		double m_value;
+		bool m_double;
 
 	};
 

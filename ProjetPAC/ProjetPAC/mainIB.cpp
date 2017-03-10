@@ -270,8 +270,11 @@ void close(void);
 // main haptics simulation loop
 void updateHaptics(void);
 
-// function that writes some data to be print into a text file
-void logData(vector<double> data, double interval, string filename);
+// function that loads an image
+bool loadImage(cBitmap* image, const string filename);
+
+// function that writes some data to be printed into a text file
+//void logData(vector<double> data, double interval, string filename);
 
 
 //------------------------------------------------------------------------------
@@ -525,20 +528,8 @@ int main(int argc, char* argv[])
 	background->setFixedAspectRatio(true);
 
 	// load background image
-	bool fileload = background->loadFromFile(RESOURCE_PATH("../resources/images/background.png"));
-	if (!fileload)
-	{
-#if defined(_MSVC)
-		fileload = background->loadFromFile("../../../bin/resources/images/background.png");
-#endif
-	}
-	if (!fileload)
-	{
-		cout << "Error - Image failed to load correctly." << endl;
-		//printf(RESOURCE_PATH("../resources/images/spheremap-1.jpg"));
-		close();
-		return (-1);
-	}
+	bool fileload = loadImage(background, "background.png");
+	if (!fileload) { return (-1); }
 	
 	// create panels for the GUI
 	pan1 = new cPanel();
@@ -551,15 +542,24 @@ int main(int argc, char* argv[])
 	camera->m_frontLayer->addChild(pan2);
 
 	// create gauges to graphically represent variable values of the simulation
-	masseGauge = new cGauge(font, "Masse de la particule", 0);
+	cBitmap* icon = new cBitmap();
+	fileload = loadImage(icon, "testicon.png");
+	if (!fileload) { return (-1); }
+	masseGauge = new cGauge(font, "Masse de la particule", icon, 0);
 	masseGauge->setColor(panelColor);
 	pan2->addChild(masseGauge);
 
-	chargeGauge = new cGauge(font, "Charge de la particule", 1);
+	icon = new cBitmap();
+	fileload = loadImage(icon, "testicon2.png");
+	if (!fileload) { return (-1); }
+	chargeGauge = new cGauge(font, "Charge de la particule", icon, 1);
 	chargeGauge->setColor(panelColor);
 	pan2->addChild(chargeGauge);
 
-	intensiteGauge = new cGauge(font, "Intensite du champ magnetique", 2);
+	icon = new cBitmap();
+	fileload = loadImage(icon, "testicon3.png");
+	if (!fileload) { return (-1); }
+	intensiteGauge = new cGauge(font, "Intensite du champ magnetique", icon, 2);
 	intensiteGauge->setColor(panelColor);
 	pan2->addChild(intensiteGauge);
 
@@ -942,7 +942,7 @@ void updateHaptics(void)
 	cVector3d devicePos(0.0, 0.0, 0.0);
 
 	// store the force the user applies to the haptic device
-	//cVector3d userForce(0.0, 0.0, 0.0);
+	cVector3d userForce(0.0, 0.0, 0.0);//mq
 
 	// store the desired position of the haptic device
 	cVector3d deviceTargetPos(0.0, 0.0, 0.0);
@@ -951,7 +951,7 @@ void updateHaptics(void)
 	cVector3d forceToApply(0.0, 0.0, 0.0);
 
 	// store desired data to write into a text file
-	vector<double> data;
+	//vector<double> data;
 
 	// gain used to control the position of the haptic device
 	int gain = 1;
@@ -1020,14 +1020,14 @@ void updateHaptics(void)
 		cVector3d sphereFce;
 		sphereFce.zero();
 
-		data.push_back(counterForceFactor);
+		//data.push_back(counterForceFactor);
 
 		if (magnetField->contain(*sphere))
 		{
 			// compute magnetic forces
 			sphereFce.add(magnetField->magnetForce(*sphere, sphere->getCharge(), sphere->getSpeed()));
 			
-			/*
+			//mq
 			// update the trust to give to the user counter force 
 			if (hapticDeviceConnected && (devicePos - deviceTargetPos).length() > 0.015)
 			{
@@ -1041,15 +1041,15 @@ void updateHaptics(void)
 
 			// compute the user counter force
 			userForce = -(counterForceFactor / 100) * sphereFce;
-			*/
+			//mq
 		}
-		/*
+		//mq
 		else
 		{
 			userForce.zero();
 			counterForceFactor = 0;
 		}
-		*/
+		//mq
 		/*else
 		{
 		loop = 0;
@@ -1058,7 +1058,7 @@ void updateHaptics(void)
 		sphere_force = sphereFce;//fusionner les 2 vars?
 
 		// compute acceleration
-		sphere->setAcceleration(sphereFce / sphere->getMass());//((sphereFce + userForce) / sphere->getMass());
+		sphere->setAcceleration((sphereFce + userForce) / sphere->getMass());//(sphereFce / sphere->getMass());//mq
 
 		// compute velocity
 		cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());
@@ -1106,7 +1106,7 @@ void updateHaptics(void)
 	}
 
 	// register data to be print into a text file
-	logData(data, 0.1, "data.txt");
+	//logData(data, 0.1, "data.txt");
 
 	// close  connection to haptic device
 	hapticDevice->close();
@@ -1115,7 +1115,26 @@ void updateHaptics(void)
 	simulationFinished = true;
 }
 
+bool loadImage(cBitmap* a_image, const string a_filename)
 
+{
+	bool fileload = a_image->loadFromFile(RESOURCE_PATH("../resources/images/" + a_filename));
+	if (!fileload)
+	{
+#if defined(_MSVC)
+		fileload = a_image->loadFromFile("../../../bin/resources/images/" + a_filename);
+#endif
+	}
+	if (!fileload)
+	{
+		cout << "Error - Image failed to load correctly." << endl;
+		//printf(RESOURCE_PATH("../resources/images/spheremap-1.jpg"));
+		close();
+	}
+	return fileload;
+}
+
+/*
 void logData(vector<double> data, double interval, string filename)
 
 {
@@ -1137,7 +1156,7 @@ void logData(vector<double> data, double interval, string filename)
 
 	file.close();
 }
-
+*/
 
 // TODO
 // ajuster les valeurs des paramètres correctement
