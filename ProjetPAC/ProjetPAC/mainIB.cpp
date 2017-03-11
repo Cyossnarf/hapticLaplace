@@ -334,8 +334,8 @@ int main(int argc, char* argv[])
 	// retrieve  resolution of computer display and position window accordingly
 	screenW = glutGet(GLUT_SCREEN_WIDTH);
 	screenH = glutGet(GLUT_SCREEN_HEIGHT);
-	windowW = 0.8 * screenH;
-	windowH = 0.5 * screenH;
+	windowW = (int)(0.8 * screenH);
+	windowH = (int)(0.5 * screenH);
 	windowPosY = (screenH - windowH) / 2;
 	windowPosX = windowPosY;
 
@@ -542,24 +542,27 @@ int main(int argc, char* argv[])
 	camera->m_frontLayer->addChild(pan2);
 
 	// create gauges to graphically represent variable values of the simulation
-	cBitmap* icon = new cBitmap();
-	fileload = loadImage(icon, "testicon.png");
+	cBitmap* icon1 = new cBitmap();
+	fileload = loadImage(icon1, "testicon.png");
 	if (!fileload) { return (-1); }
-	masseGauge = new cGauge(font, "Masse de la particule", icon, 0);
+	masseGauge = new cGauge(font, "Masse de la particule", icon1, 0);
 	masseGauge->setColor(panelColor);
 	pan2->addChild(masseGauge);
 
-	icon = new cBitmap();
-	fileload = loadImage(icon, "testicon2.png");
+	icon1 = new cBitmap();
+	fileload = loadImage(icon1, "testicon3.png");
 	if (!fileload) { return (-1); }
-	chargeGauge = new cGauge(font, "Charge de la particule", icon, 1);
+	cBitmap* icon2 = new cBitmap();
+	fileload = loadImage(icon2, "testicon4.png");
+	if (!fileload) { return (-1); }
+	chargeGauge = new cGauge(font, "Charge de la particule", icon1, 1, icon2);
 	chargeGauge->setColor(panelColor);
 	pan2->addChild(chargeGauge);
 
-	icon = new cBitmap();
-	fileload = loadImage(icon, "testicon3.png");
+	icon1 = new cBitmap();
+	fileload = loadImage(icon1, "testicon5.png");
 	if (!fileload) { return (-1); }
-	intensiteGauge = new cGauge(font, "Intensite du champ magnetique", icon, 2);
+	intensiteGauge = new cGauge(font, "Intensite du champ magnetique", icon1, 2);
 	intensiteGauge->setColor(panelColor);
 	pan2->addChild(intensiteGauge);
 
@@ -895,10 +898,10 @@ void updateGraphics(void)
 	TwWindowSize(windowW, windowH);
 
 	// display bars
-	barPosX = windowW*0.775;
-	barPosY = windowH*0.6;
-	barSizeW = windowW*0.2;
-	barSizeH = windowH*0.4;
+	barPosX = (int)(windowW*0.775);
+	barPosY = (int)(windowH*0.6);
+	barSizeW = (int)(windowW*0.2);
+	barSizeH = (int)(windowH*0.4);
 	barPos = to_string(barPosX)+" "+ to_string(barPosY);
 	barSize = to_string(barSizeW) + " " + to_string(barSizeH);
 	barDef = " Bonjour position='" + barPos + "' size='" + barSize+"'";

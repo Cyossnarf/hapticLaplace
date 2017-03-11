@@ -38,7 +38,7 @@ chai3d::cGauge::cGauge(cFont* a_font, const std::string a_text, cBitmap* a_icon,
 		level->rotateWidgetDeg(90);
 		this->addChild(level);
 
-		// add a bitmap object as a child
+		// add a second bitmap object as a child
 		this->addChild(a_icon2);
 	}
 }
@@ -46,12 +46,14 @@ chai3d::cGauge::cGauge(cFont* a_font, const std::string a_text, cBitmap* a_icon,
 void chai3d::cGauge::update(const double a_frameWidth,
 	const double a_upBoundary,
 	const double a_downBoundary,
-	const double a_gaugesNumber)
+	const int a_gaugesNumber)
 
 {
 	double frameHeight = a_upBoundary - a_downBoundary;
 	double levelHeight = 20;//frameHeight * 0.045;
 	double gaugeHeight = levelHeight + 60;
+	int frameMarge = 15;
+	int iconWidth = 40;
 	cLabel* txt = (cLabel*) getChild(0);
 	cLevel* lvl = (cLevel*) getChild(1);
 	cBitmap* ico = (cBitmap*) getChild(2);
@@ -61,29 +63,29 @@ void chai3d::cGauge::update(const double a_frameWidth,
 
 	txt->setLocalPos(15, gaugeHeight - 20);
 
-	ico->setLocalPos(a_frameWidth - 47, 14);
+	ico->setLocalPos(a_frameWidth - frameMarge - iconWidth, 30 - iconWidth / 2);
 
 	if (!m_double) {
-		int levelNumIncrements = (int)((a_frameWidth - 62) / 2);
+		int levelNumIncrements = (int)((a_frameWidth- iconWidth) / 2 - frameMarge);
 
-		lvl->setLocalPos(15, gaugeHeight - 40);
+		lvl->setLocalPos(frameMarge, gaugeHeight - 20 - levelHeight);
 		lvl->setNumIncrements(levelNumIncrements);
 		lvl->setValue(m_value);
 	}
 	else {
-		cLevel* lvl_2 = (cLevel*)getChild(3);
+		cLevel* lvl_2 = (cLevel*) getChild(3);
 		cBitmap* ico_2 = (cBitmap*) getChild(4);
-		int levelNumIncrements = (int)((a_frameWidth - 94) / 4);
+		int levelNumIncrements = (int)((a_frameWidth / 2 - frameMarge - iconWidth) / 2);
 
-		lvl->setLocalPos(a_frameWidth / 2 + 1, gaugeHeight - 40);
+		lvl->setLocalPos(a_frameWidth / 2 + 1, gaugeHeight - 20 - levelHeight);
 		lvl->setNumIncrements(levelNumIncrements);
 		lvl->setValue(m_value);
 
-		lvl_2->setLocalPos(a_frameWidth / 2 - 1, gaugeHeight - 40);
+		lvl_2->setLocalPos(a_frameWidth / 2 - 1, gaugeHeight - 20 - levelHeight);
 		lvl_2->setNumIncrements(levelNumIncrements);
 		lvl_2->setValue(0.0);
 
-		ico_2->setLocalPos(15, 14);
+		ico_2->setLocalPos(frameMarge, 30 - iconWidth / 2);
 	}
 
 	
