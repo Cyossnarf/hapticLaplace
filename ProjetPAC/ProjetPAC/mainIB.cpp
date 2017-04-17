@@ -543,26 +543,29 @@ int main(int argc, char* argv[])
 
 	// create gauges to graphically represent variable values of the simulation
 	cBitmap* icon1 = new cBitmap();
-	fileload = loadImage(icon1, "testicon.png");
+	fileload = loadImage(icon1, "masse.png");
+	cBitmap* icon2 = new cBitmap();
+	fileload = fileload && loadImage(icon2, "plume.png");
 	if (!fileload) { return (-1); }
-	masseGauge = new cGauge(font, "Masse de la particule", icon1, 0);
+	masseGauge = new cGauge(font, "Masse de la particule", icon1, icon2, 0);
 	masseGauge->setColor(panelColor);
 	pan2->addChild(masseGauge);
 
 	icon1 = new cBitmap();
-	fileload = loadImage(icon1, "testicon3.png");
+	fileload = loadImage(icon1, "plus.png");
+	icon2 = new cBitmap();
+	fileload = fileload && loadImage(icon2, "moins.png");
 	if (!fileload) { return (-1); }
-	cBitmap* icon2 = new cBitmap();
-	fileload = loadImage(icon2, "testicon4.png");
-	if (!fileload) { return (-1); }
-	chargeGauge = new cGauge(font, "Charge de la particule", icon1, 1, icon2);
+	chargeGauge = new cGauge(font, "Charge de la particule", icon1, icon2, 1, true);
 	chargeGauge->setColor(panelColor);
 	pan2->addChild(chargeGauge);
 
 	icon1 = new cBitmap();
-	fileload = loadImage(icon1, "testicon5.png");
+	fileload = loadImage(icon1, "aimantgros.png");
+	icon2 = new cBitmap();
+	fileload = fileload && loadImage(icon2, "aimantpetit.png");
 	if (!fileload) { return (-1); }
-	intensiteGauge = new cGauge(font, "Intensite du champ magnetique", icon1, 2);
+	intensiteGauge = new cGauge(font, "Intensite du champ magnetique", icon1, icon2, 2);
 	intensiteGauge->setColor(panelColor);
 	pan2->addChild(intensiteGauge);
 
@@ -854,6 +857,7 @@ void updateGraphics(void)
 	SPHERE_FORCE[1] = (float)(sphere_force.z());
 
 	speedVector->setLocalPos(sphere->getLocalPos());
+	speedVector->updateArrow(sphere_speed);
 
 	/////////////////////////////////////////////////////////////////////
 	// UPDATE WIDGETS
@@ -878,7 +882,7 @@ void updateGraphics(void)
 	masseGauge->update(windowW * 0.2, windowH, windowH * 0.4, 3);
 	chargeGauge->update(windowW * 0.2, windowH, windowH * 0.4, 3);
 	intensiteGauge->update(windowW * 0.2, windowH, windowH * 0.4, 3);
-
+	
 	/////////////////////////////////////////////////////////////////////
 	// RENDER SCENE
 	/////////////////////////////////////////////////////////////////////
