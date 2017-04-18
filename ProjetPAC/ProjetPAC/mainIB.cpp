@@ -89,9 +89,6 @@ bool hapticDeviceConnected = false;
 // fullscreen mode
 bool fullscreen = true;
 
-// mirrored display
-bool mirroredDisplay = false;
-
 // top camera enabled
 bool showTopView = true;
 
@@ -212,6 +209,9 @@ string barPos;
 string barSize;
 string barDef;
 
+// indicates if the field/speed/force triaedra is displayed
+bool triaedraDisplay = true;
+
 // root resource path
 string resourceRoot;
 
@@ -307,8 +307,8 @@ int main(int argc, char* argv[])
 	cout << endl;
 	cout << "-----------------------------------" << endl;
 	cout << "CHAI3D" << endl;
-	cout << "Demo: 09-magnets" << endl;
 	cout << "Copyright 2003-2015" << endl;
+	cout << "Haptic Laplace" << endl;
 	cout << "-----------------------------------" << endl << endl << endl;
 	cout << "Keyboard Options:" << endl << endl;
 	cout << "[1] - select field opacity" << endl;
@@ -316,7 +316,7 @@ int main(int argc, char* argv[])
 	cout << "[3] - select sphere charge" << endl;
 	cout << "[+/-] - increase/decrease selected variable" << endl;
 	cout << "[f] - Enable/Disable full screen mode" << endl;
-	cout << "[m] - Enable/Disable vertical mirroring" << endl;
+	cout << "[d] - Enable/Disable triaedra display" << endl;
 	cout << "[r] - reset position of the sphere" << endl;
 	cout << "[ESC] - Exit application" << endl;
 	cout << endl << endl;
@@ -402,9 +402,6 @@ int main(int argc, char* argv[])
 	// set stereo eye separation and focal length (applies only if stereo is enabled)
 	camera->setStereoEyeSeparation(0.03);
 	camera->setStereoFocalLength(1.8);
-
-	// set vertical mirrored display mode
-	camera->setMirrorVertical(mirroredDisplay);
 
 	// create a light source
 	light = new cSpotLight(world);
@@ -702,11 +699,13 @@ void keySelect(unsigned char key, int x, int y)
 		}
 	}
 
-	// option m: toggle vertical mirroring
-	if (key == 'm')
+	// option d: toggle triaedra display
+	if (key == 'd')
 	{
-		mirroredDisplay = !mirroredDisplay;
-		camera->setMirrorVertical(mirroredDisplay);
+		triaedraDisplay = !triaedraDisplay;
+		magnetFieldVector->setEnabled(triaedraDisplay, true);
+		speedVector->setEnabled(triaedraDisplay, true);
+		forceVector->setEnabled(triaedraDisplay, true);
 	}
 
 	// option r: reset position of the sphere
@@ -906,7 +905,7 @@ void updateGraphics(void)
 	/////////////////////////////////////////////////////////////////////
 
 	// update shadow maps (if any)
-	world->updateShadowMaps(false, mirroredDisplay);
+	world->updateShadowMaps();
 	
 	// render world
 	camera->renderView_custom((int)(windowW * 0.05),
