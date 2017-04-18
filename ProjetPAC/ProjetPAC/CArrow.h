@@ -16,13 +16,13 @@ namespace chai3d {
 		cArrow(const cVector3d &pos, cColorb &col, double shaft_radius, double tip_radius, double len, double tip_rel_len = 0.25);
 		~cArrow();
 
-		void updateArrow(const cVector3d &reference);
+		void updateArrow(const cVector3d &reference, double scale_factor);
 
 	private:
 
-		double length;
 		double tip_len;
 		double shaft_len;
+		int nb_vertices;
 
 	};
 

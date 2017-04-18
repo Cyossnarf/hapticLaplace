@@ -226,7 +226,7 @@ double userMovex(0.0);
 double userMovey(0.0);
 double userMovez(0.0);
 
-// Ce qui suit sont des pointeurs utiles pour l'affichage du GUI
+// Ce qui suit est utilisé pour l'affichage du GUI
 // C'est un peu bizarre parce qu'on devrait logiquement appeler des attributs des objets magnetsphere et magnetfield
 // Mais le code n'a pas été adapté pour ça...
 
@@ -843,10 +843,10 @@ void updateGraphics(void)
 	magnetFieldVector->setLocalPos(sphere->getLocalPos());
 
 	speedVector->setLocalPos(sphere->getLocalPos());
-	speedVector->updateArrow(sphere_speed);
+	speedVector->updateArrow(sphere_speed, 0.23);
 
 	forceVector->setLocalPos(sphere->getLocalPos());
-	forceVector->updateArrow(sphere_force);
+	forceVector->updateArrow(sphere_force, 3.0);
 
 	// move the camera
 	if (camera->isInMovement())
@@ -882,7 +882,7 @@ void updateGraphics(void)
 	/////////////////////////////////////////////////////////////////////
 
 	// update variable values
-	labelInfo->setText("field opacity : " + cStr(magnetField->getTransparency() * 100) + "% | sphere mass : " + cStr(sphere->getMass()) + " kg | sphere charge : " + cStr(sphere->getCharge()) + " C | current intensity : " + cStr(magnetField->getCurrentIntensity()) + " A");
+	labelInfo->setText(cStr(sphere_force.length()) + " | field opacity : " + cStr(magnetField->getTransparency() * 100) + "% | sphere mass : " + cStr(sphere->getMass()) + " kg | sphere charge : " + cStr(sphere->getCharge()) + " C | current intensity : " + cStr(magnetField->getCurrentIntensity()) + " A");
 
 	// update position of info label
 	labelInfo->setLocalPos(0.5 * (windowW - labelInfo->getWidth()), 15);
