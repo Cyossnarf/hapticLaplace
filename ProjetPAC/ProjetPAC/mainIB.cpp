@@ -159,10 +159,14 @@ cMagnetSphere *sphere;
 // magnetic field
 cMagnetField *magnetField;
 
+// (big) visual representation of the magnetic field vector
+cArrow *bigMagnetFieldVector;
 // visual representation of the magnetic field vector
 cArrow *magnetFieldVector;
 // visual representation of the sphere speed vector
 cArrow *speedVector;
+// visual representation of the magnetic force vector
+cArrow *forceVector;
 
 // circle to be drawn around the magnet field
 //cCircle *circle;
@@ -484,13 +488,17 @@ int main(int argc, char* argv[])
 	// set position of the magnetic field
 	magnetField->setLocalPos(-magnetField->getLength(), 0.0, 0.0);//(0.0, 0.05, 0.01);
 
-	//create an arrow
-	magnetFieldVector = new cArrow(cVector3d(-0.35, 0.0, 0.0), 0.01, 0.02, 0.3);
-	speedVector = new cArrow(cVector3d(0.0, -0.23, 0.0), 0.002, 0.004, 0.03);
+	// create arrows
+	bigMagnetFieldVector = new cArrow(cVector3d(-0.35, 0.0, 0.0), cColorb(0, 0, 255), 0.01, 0.02, 0.3);
+	magnetFieldVector = new cArrow(cVector3d(0.0, -0.23, 0.0), cColorb(0, 0, 255), 0.002, 0.004, 0.03);
+	speedVector = new cArrow(cVector3d(0.0, -0.23, 0.0), cColorb(0, 255, 0), 0.002, 0.004, 0.03);
+	forceVector = new cArrow(cVector3d(0.0, -0.23, 0.0), cColorb(255, 0, 0), 0.002, 0.004, 0.03);
 
-	//add the arrow to the world
+	// add the arrows to the world
+	world->addChild(bigMagnetFieldVector);
 	world->addChild(magnetFieldVector);
 	world->addChild(speedVector);
+	world->addChild(forceVector);
 
 	//--------------------------------------------------------------------------
 	// BARS
@@ -831,6 +839,16 @@ void updateGraphics(void)
 	// UPDATE PURELY GRAPHICAL ELEMENTS
 	/////////////////////////////////////////////////////////////////////
 
+	// some arrows are positioned and orientated on the sphere
+	magnetFieldVector->setLocalPos(sphere->getLocalPos());
+
+	speedVector->setLocalPos(sphere->getLocalPos());
+	speedVector->updateArrow(sphere_speed);
+
+	forceVector->setLocalPos(sphere->getLocalPos());
+	forceVector->updateArrow(sphere_force);
+
+	// move the camera
 	if (camera->isInMovement())
 	{
 		camera->moveCam();
@@ -838,16 +856,19 @@ void updateGraphics(void)
 
 	if (camera->isInMovement() || camera->getState() != 1)
 	{
+		// z-axis-rotate the GUI vectors, so they match the camera's new point of view
 		sphere_force = camera->getRotation() * sphere_force;
 		sphere_speed = camera->getRotation() * sphere_speed;
 		magn_field = camera->getRotation() * cVector3d(1.0, 0.0, 0.0);
 		//printf((magn_field.str() + "\n").c_str());//debug
 
+		// update for the twBar
 		MAGN_FIELD[2] = (float)(magn_field.x());
 		MAGN_FIELD[0] = (float)(magn_field.y());
 		MAGN_FIELD[1] = (float)(magn_field.z());
 	}
 
+	// updates for the twBar
 	SPHERE_SPEED[2] = (float)(sphere_speed.x());
 	SPHERE_SPEED[0] = (float)(sphere_speed.y());
 	SPHERE_SPEED[1] = (float)(sphere_speed.z());
@@ -855,9 +876,6 @@ void updateGraphics(void)
 	SPHERE_FORCE[2] = (float)(sphere_force.x());
 	SPHERE_FORCE[0] = (float)(sphere_force.y());
 	SPHERE_FORCE[1] = (float)(sphere_force.z());
-
-	speedVector->setLocalPos(sphere->getLocalPos());
-	speedVector->updateArrow(sphere_speed);
 
 	/////////////////////////////////////////////////////////////////////
 	// UPDATE WIDGETS
