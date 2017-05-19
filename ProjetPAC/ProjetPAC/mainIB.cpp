@@ -100,7 +100,7 @@ int resetCount = 0;
 int counterForceFactor = 0;
 
 // variable selected for modification
-string selection = "";
+int selection = 0;
 
 
 //------------------------------------------------------------------------------
@@ -191,6 +191,8 @@ cPanel* pan2;
 cPanel* pan3;
 cPanel* pan4;
 
+cPanel* pan32;
+
 // gauges to graphically represent variable values of the simulation
 cGauge* masseGauge;
 cGauge* chargeGauge;
@@ -243,6 +245,12 @@ double userMovex(0.0);
 double userMovey(0.0);
 double userMovez(0.0);
 
+// sphere velocity given by user
+cVector3d userVel;
+
+// clock's time step
+double timeInterval;
+
 int nbTraj = 0;
 
 //
@@ -261,10 +269,9 @@ int bestscore2 = 0;
 int mode_j = 1;
 
 //parametres
-int npar = 0;
-bool param;
-bool parPlus;
-bool parMoins;
+bool shiftButtonPressed;
+bool plusButtonPressed;
+bool minusButtonPressed;
 bool pm = false;
 bool pp = false;
 bool np = false;
@@ -310,6 +317,10 @@ void mouseClickCallback(int button, int state, int x, int y);
 
 // callback when a key is pressed
 void keySelect(unsigned char key, int x, int y);
+
+// function that applies commands according to the key
+// (used for 4 keys only)
+void keyApply(int key);
 
 // callback to render graphic scene
 void updateGraphics(void);
@@ -713,7 +724,7 @@ int main(int argc, char* argv[])
 	pan2->addChild(viewGauge);
 
 	//crée des panels pour l'information
-	cPanel* pan32 = new cPanel();
+	pan32 = new cPanel();
 	pan32->setColor(panelColor);
 	cBitmap* info0 = new cBitmap();
 	cBitmap* info1 = new cBitmap();
@@ -748,7 +759,7 @@ int main(int argc, char* argv[])
 	info7->setEnabled(false);
 	camera->m_frontLayer->addChild(pan32);
 	cPanel* pan42 = new cPanel();
-	pan4->setEnabled(false, true);
+	pan42->setEnabled(false, true);
 	camera->m_frontLayer->addChild(pan42);
 
 
@@ -965,79 +976,112 @@ void keySelect(unsigned char key, int x, int y)
 		camera->setInMovement();
 	}
 
-	// option 1: select the transparency level of the field
-	if (key == '1')
-	{
-		selection = "transparency";
-	}
+	// option 2: shift selection to the next parameter
+	if (key == '2') { keyApply(2); }
 
-	// option 2: select the charge of the sphere
-	if (key == '2')
-	{
-		selection = "mass";
-	}
-
-	// option 3: select the mass of the sphere
-	if (key == '3')
-	{
-		selection = "charge";
-	}
-
-	// option 4: select the current intensity of the turns
-	if (key == '4')
-	{
-		selection = "intensity";
-	}
+	// option 0: accept/launch
+	if (key == '0') { keyApply(0); }
 
 	// option +: increase the selected variable
 	if (key == '+')
 	{
-		if (selection.compare("transparency") == 0)
-		{
-			magnetField->setTransparency(magnetField->getTransparency() + 0.05);
-		}
-
-		if (selection.compare("charge") == 0)
-		{
-			sphere->setCharge(sphere->getCharge() + 0.5);
-			SPHERE_CHARGE += 0.5;
-		}
-
-		if (selection.compare("mass") == 0)
-		{
-			sphere->setMass(sphere->getMass() + 0.01);
-			SPHERE_MASS += 0.01;
-		}
-
-		if (selection.compare("intensity") == 0)
-		{
-			magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() + 0.1);
-		}
+		//
 	}
 
 	// option -: decrease the selected variable
 	if (key == '-')
 	{
-		if (selection.compare("transparency") == 0)
-		{
-			magnetField->setTransparency(magnetField->getTransparency() - 0.05);
-		}
+		//
+	}
+}
 
-		if (selection.compare("charge") == 0)
-		{
-			sphere->setCharge(sphere->getCharge() - 0.5);
-			SPHERE_CHARGE -= 0.5;
-		}
+//------------------------------------------------------------------------------
 
-		if (selection.compare("mass") == 0)
-		{
-			sphere->setMass(sphere->getMass() - 0.01);
-			SPHERE_MASS -= 0.01;
+void keyApply(int key)
+{
+	if (key == 2) {
+		if (!np) {
+			selection += 1;
+			if (selection > 4) {
+				selection = 0;
+			}
+			if (selection == 0) {
+				masseGauge->setColor(panelSelectedColor);
+				viewGauge->setColor(panelColor);
+			}
+			if (selection == 1) {
+				masseGauge->setColor(panelColor);
+				chargeGauge->setColor(panelSelectedColor);
+			}
+			if (selection == 2) {
+				intensiteGauge->setColor(panelSelectedColor);
+				chargeGauge->setColor(panelColor);
+			}
+			if (selection == 3) {
+				intensiteGauge->setColor(panelColor);
+				opacityGauge->setColor(panelSelectedColor);
+			}
+			if (selection == 4) {
+				viewGauge->setColor(panelSelectedColor);
+				opacityGauge->setColor(panelColor);
+			}
+			np = true;
 		}
-
-		if (selection.compare("intensity") == 0)
+	}
+	else if (key == 0)
+	{
+		//printf("Salut,");//debug
+		if (tirpossible)
 		{
-			magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() - 0.1);
+			cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());
+			sphere->setSpeed(newVel);
+		}
+		else
+		{
+			if (infocount == pinfocount) {
+				infocount += 1;
+				//cPanel* pan = (cPanel*)camera->m_frontLayer->getChild(4);
+				if (infocount > 7) {
+					infocount = -1;
+				}
+				if (infocount == -1) {
+					pan32->getChild(7)->setEnabled(true, true);
+				}
+				if (infocount == 0) {
+					pan32->getChild(7)->setEnabled(false, true);
+					pan32->getChild(0)->setEnabled(true, true);
+				}
+				if (infocount == 1) {
+					pan32->getChild(0)->setEnabled(false, true);
+					pan32->getChild(1)->setEnabled(true, true);
+				}
+				if (infocount == 2) {
+					pan32->getChild(1)->setEnabled(false, true);
+					pan32->getChild(2)->setEnabled(true, true);
+				}
+				if (infocount == 3) {
+					pan32->getChild(2)->setEnabled(false, true);
+					pan32->getChild(3)->setEnabled(true, true);
+				}
+				if (infocount == 4) {
+					tirpossiblef = true;
+					pan32->getChild(3)->setEnabled(false, true);
+				}
+				if (infocount == 5) {
+
+					pan32->getChild(4)->setEnabled(false, true);
+					pan32->getChild(5)->setEnabled(true, true);
+				}
+				if (infocount == 6) {
+
+					pan32->getChild(5)->setEnabled(false, true);
+					pan32->getChild(6)->setEnabled(true, true);
+				}
+				if (infocount == 7) {
+					tirpossiblef = true;
+					pan32->getChild(6)->setEnabled(false, true);
+				}
+			}
 		}
 	}
 }
@@ -1447,7 +1491,7 @@ void updateHaptics(void)
 		clock.stop();
 
 		// read the time increment in seconds
-		double timeInterval = cMin(0.001, clock.getCurrentTimeSeconds());
+		timeInterval = cMin(0.001, clock.getCurrentTimeSeconds());
 
 		// restart the simulation clock
 		clock.reset();
@@ -1462,50 +1506,25 @@ void updateHaptics(void)
 		/////////////////////////////////////////////////////////////////////////
 
 		//parametres
-		hapticDevice->getUserSwitch(1, parMoins);
-		hapticDevice->getUserSwitch(3, parPlus);
-		hapticDevice->getUserSwitch(2, param);
-		if (param) {
-			if (!np) {
-				npar += 1;
-				if (npar > 4) {
-					npar = 0;
-				}
-				if (npar == 0) {
-					masseGauge->setColor(panelSelectedColor);
-					viewGauge->setColor(panelColor);
-				}
-				if (npar == 1) {
-					masseGauge->setColor(panelColor);
-					chargeGauge->setColor(panelSelectedColor);
-				}
-				if (npar == 2) {
-					intensiteGauge->setColor(panelSelectedColor);
-					chargeGauge->setColor(panelColor);
-				}
-				if (npar == 3) {
-					intensiteGauge->setColor(panelColor);
-					opacityGauge->setColor(panelSelectedColor);
-				}
-				if (npar == 4) {
-					viewGauge->setColor(panelSelectedColor);
-					opacityGauge->setColor(panelColor);
-				}
-				np = true;
-			}
+		hapticDevice->getUserSwitch(1, minusButtonPressed);
+		hapticDevice->getUserSwitch(3, plusButtonPressed);
+		hapticDevice->getUserSwitch(2, shiftButtonPressed);
+
+		if (shiftButtonPressed) {
+			keyApply(2);
 		}
 		else {
 			if (np) {
 				np = false;
 			}
 		}
-		if (parPlus) {
+		if (plusButtonPressed) {
 			if (!pp) {
-				if (npar == 3) {
+				if (selection == 3) {
 					magnetField->setTransparency(magnetField->getTransparency() + 0.05);
 					opacityGauge->setValue(magnetField->getTransparency());
 				}
-				if (npar == 1) {
+				if (selection == 1) {
 					sphere->setCharge(sphere->getCharge() + 0.5);
 					if (sphere->getCharge() > 5) {
 						sphere->setCharge(5);
@@ -1515,14 +1534,14 @@ void updateHaptics(void)
 					}
 					chargeGauge->setValue(sphere->getCharge() / 5);
 				}
-				if (npar == 0) {
+				if (selection == 0) {
 					sphere->setMass(sphere->getMass() + 0.01);
 					if (sphere->getMass() > 0.35) {
 						sphere->setMass(0.35);
 					}
 					masseGauge->setValue(sphere->getMass() / 0.35);
 				}
-				if (npar == 2) {
+				if (selection == 2) {
 					magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() + 0.5);
 					if (magnetField->getCurrentIntensity() > 5) {
 						magnetField->setCurrentIntensity(5);
@@ -1532,7 +1551,7 @@ void updateHaptics(void)
 					}
 					intensiteGauge->setValue(magnetField->getCurrentIntensity() / 5);
 				}
-				if (npar == 4) {
+				if (selection == 4) {
 					if (!camera->isInMovement()) {
 						camera->setInMovement();
 						viewGauge->setValue(!viewGauge->getValue());
@@ -1546,19 +1565,19 @@ void updateHaptics(void)
 				pp = false;
 			}
 		}
-		if (parMoins) {
+		if (minusButtonPressed) {
 			if (!pm) {
-				if (npar == 4) {
+				if (selection == 4) {
 					if (!camera->isInMovement()) {
 						camera->setInMovement();
 						viewGauge->setValue(!viewGauge->getValue());
 					}
 				}
-				if (npar == 3) {
+				if (selection == 3) {
 					magnetField->setTransparency(magnetField->getTransparency() - 0.05);
 					opacityGauge->setValue(magnetField->getTransparency());
 				}
-				if (npar == 1) {
+				if (selection == 1) {
 					sphere->setCharge(sphere->getCharge() - 0.5);
 					if (sphere->getCharge() == 0) {
 						sphere->setCharge(-0.5);
@@ -1568,14 +1587,14 @@ void updateHaptics(void)
 					}
 					chargeGauge->setValue(sphere->getCharge() / 5);
 				}
-				if (npar == 0) {
+				if (selection == 0) {
 					sphere->setMass(sphere->getMass() - 0.01);
 					if (sphere->getMass() <= 0) {
 						sphere->setMass(0.01);
 					}
 					masseGauge->setValue(sphere->getMass() / 0.35);
 				}
-				if (npar == 2) {
+				if (selection == 2) {
 					magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() - 0.5);
 					if (magnetField->getCurrentIntensity() < -5) {
 						magnetField->setCurrentIntensity(-5);
@@ -1611,7 +1630,7 @@ void updateHaptics(void)
 		//userVel = userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
 
 		// get sphere velocity from user
-		cVector3d userVel(devicePos.x()*0.001, devicePos.y()*0.001, devicePos.z()*0.001);//pb1
+		userVel = cVector3d(devicePos.x()*0.001, devicePos.y()*0.001, devicePos.z()*0.001);//pb1
 		if (mode_j == 1) {
 			userVel = (userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection());
 		}
@@ -1681,57 +1700,10 @@ void updateHaptics(void)
 			sphere->setSpeed(newVel);
 		}
 		else {
-			if (testButtonTir && tirpossible) {
-				cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());
-				sphere->setSpeed(newVel);
+			if (testButtonTir) {
+				keyApply(0);
 			}
-			if (testButtonTir && !tirpossible) {
-				if (infocount == pinfocount) {
-					infocount += 1;
-					cPanel* pan = (cPanel*)camera->m_frontLayer->getChild(4);
-					if (infocount > 7) {
-						infocount = -1;
-					}
-					if (infocount == -1) {
-						pan->getChild(7)->setEnabled(true, true);
-					}
-					if (infocount == 0) {
-						pan->getChild(7)->setEnabled(false, true);
-						pan->getChild(0)->setEnabled(true, true);
-					}
-					if (infocount == 1) {
-						pan->getChild(0)->setEnabled(false, true);
-						pan->getChild(1)->setEnabled(true, true);
-					}
-					if (infocount == 2) {
-						pan->getChild(1)->setEnabled(false, true);
-						pan->getChild(2)->setEnabled(true, true);
-					}
-					if (infocount == 3) {
-						pan->getChild(2)->setEnabled(false, true);
-						pan->getChild(3)->setEnabled(true, true);
-					}
-					if (infocount == 4) {
-						tirpossiblef = true;
-						pan->getChild(3)->setEnabled(false, true);
-					}
-					if (infocount == 5) {
-
-						pan->getChild(4)->setEnabled(false, true);
-						pan->getChild(5)->setEnabled(true, true);
-					}
-					if (infocount == 6) {
-
-						pan->getChild(5)->setEnabled(false, true);
-						pan->getChild(6)->setEnabled(true, true);
-					}
-					if (infocount == 7) {
-						tirpossiblef = true;
-						pan->getChild(6)->setEnabled(false, true);
-					}
-				}
-			}
-			if (!testButtonTir) {
+			else {
 				pinfocount = infocount;
 				if (tirpossiblef) {
 					tirpossible = true;
