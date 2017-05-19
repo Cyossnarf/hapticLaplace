@@ -3,7 +3,7 @@
 #include "widgets/CLabel.h"
 #include "widgets/CBitmap.h"
 
-chai3d::cGauge::cGauge(cFont* a_font, const std::string a_text, cBitmap* a_icon, cBitmap* a_icon2, const int a_id, const bool a_double) : cPanel()
+chai3d::cGauge::cGauge(cFontPtr a_font, const std::string a_text, cBitmap* a_icon, cBitmap* a_icon2, const int a_id, const bool a_double) : cPanel()
 
 {
 	// position of the gauge on screen
@@ -22,7 +22,7 @@ chai3d::cGauge::cGauge(cFont* a_font, const std::string a_text, cBitmap* a_icon,
 	// add a level object as a child
 	cLevel* level = new cLevel();
 	level->setRange(0.0, 1.0);
-	level->setSize(20);
+	level->setWidth(20);
 	//level->setSingleIncrementDisplay(true);
 	level->setValue(0.5);
 	level->rotateWidgetDeg(-90);
@@ -37,7 +37,7 @@ chai3d::cGauge::cGauge(cFont* a_font, const std::string a_text, cBitmap* a_icon,
 		// add a second level object as a child
 		level = new cLevel();
 		level->setRange(0.0, 1.0);
-		level->setSize(20);
+		level->setWidth(20);
 		level->setValue(0.0);
 		level->rotateWidgetDeg(90);
 		this->addChild(level);

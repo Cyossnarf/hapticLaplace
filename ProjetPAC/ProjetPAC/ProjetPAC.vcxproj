@@ -24,6 +24,7 @@
     <ClCompile Include="CMobileCam.cpp" />
     <ClCompile Include="CMagnetField.cpp" />
     <ClCompile Include="CMagnetSphere.cpp" />
+    <ClCompile Include="cCamIco.cpp" />
     <ClCompile Include="mainIB.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -32,6 +33,7 @@
     <ClInclude Include="CMobileCam.h" />
     <ClInclude Include="CMagnetField.h" />
     <ClInclude Include="CMagnetSphere.h" />
+    <ClInclude Include="cCamIco.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{73884770-F82C-4849-A2F0-C09F2CEE6B25}</ProjectGuid>

@@ -45,7 +45,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "chai3d.h"
 #include "CMagnetField.h"
 #include "CMagnetSphere.h"
-//#include "CCircle.h"
 #include "CMobileCam.h"
 #include "CArrow.h"
 #include "CGauge.h"
@@ -54,6 +53,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <ctime>
 #include <iostream>
 #include <fstream>
+#include <queue>
 //------------------------------------------------------------------------------
 using namespace chai3d;
 using namespace std;
@@ -119,12 +119,13 @@ double SPHERE_CHARGE = 1.0;
 const double SPHERE_DAMPING = 0.999;
 
 // stiffness of the haptic device
-const double HAPTIC_STIFFNESS = 1000.0;
+const double HAPTIC_STIFFNESS = 1000.0;//jp
 
 // colors
 const cColorf backgroundColor = cColorf(52 / 255.f, 48 / 255.f, 71 / 255.f);
 const cColorf panelColor = cColorf(125 / 255.f, 117 / 255.f, 164 / 255.f);
-
+const cColorf metalColor = cColorf(192 / 255.f, 192 / 255.f, 192 / 255.f);
+const cColorf blackColor = cColorf(8 / 255.f, 9 / 255.f, 16 / 255.f);
 
 
 //------------------------------------------------------------------------------
@@ -171,12 +172,21 @@ cArrow *forceVector;
 // a bar to display info
 TwBar *bar1;
 
+// a label to explain what is happening//jp
+cLabel* labelMessage;
+
+// a label to display game over
+cLabel* go;
+bool gogo = false;
+
 // a label to display the values of the variables of the simulation
 cLabel* labelInfo;
 
 // panels for the GUI
 cPanel* pan1;
 cPanel* pan2;
+cPanel* pan3;
+cPanel* pan4;
 
 // gauges to graphically represent variable values of the simulation
 cGauge* masseGauge;
@@ -212,6 +222,8 @@ string barDef;
 // indicates if the field/speed/force triaedra is displayed
 bool triaedraDisplay = true;
 
+bool BVDisplay = true;
+
 // root resource path
 string resourceRoot;
 
@@ -225,6 +237,32 @@ double scaleFactor(5e-5);
 double userMovex(0.0);
 double userMovey(0.0);
 double userMovez(0.0);
+
+int nbTraj = 0;
+
+//
+cVector3d devicePos;
+cVector3d position;
+cVector3d posref;
+
+// score
+int nbvisees = 0;
+int nbtouches = 0;
+cShapeSphere *cible;
+int bestscore1 = 0;
+int bestscore2 = 0;
+
+// mode de jeu
+int mode_j = 1;
+
+//parametres
+int npar = 0;
+bool param;
+bool parPlus;
+bool parMoins;
+bool pm = false;
+bool pp = false;
+bool np = false;
 
 // Ce qui suit est utilisé pour l'affichage du GUI
 // C'est un peu bizarre parce qu'on devrait logiquement appeler des attributs des objets magnetsphere et magnetfield
@@ -277,9 +315,25 @@ void updateHaptics(void);
 // function that loads an image
 bool loadImage(cBitmap* image, const string filename);
 
-// function that writes some data to be printed into a text file
-//void logData(vector<double> data, double interval, string filename);
+// reset function
+void reset();
 
+//string for game over label
+string gost() {
+	if ((nbtouches >= bestscore1 && mode_j == 1) || (nbtouches >= bestscore2 && mode_j == 2)) {
+		return("BRAVO! VOTRE SCORE EST " + cStr(nbtouches) + "/" + cStr(nbvisees));
+	}
+	else {
+		string retour = "GAME OVER! VOTRE SCORE EST " + cStr(nbtouches) + "/" + cStr(nbvisees) + "! LE  MEILLEUR SCORE EST ";
+		if (mode_j == 1) {
+			retour += cStr(bestscore1) + "/" + cStr(nbvisees);
+		}
+		if (mode_j == 2) {
+			retour += cStr(bestscore2) + "/" + cStr(nbvisees);
+		}
+		return retour;
+	}
+}
 
 //------------------------------------------------------------------------------
 // DECLARED MACROS
@@ -317,6 +371,7 @@ int main(int argc, char* argv[])
 	cout << "[+/-] - increase/decrease selected variable" << endl;
 	cout << "[f] - Enable/Disable full screen mode" << endl;
 	cout << "[d] - Enable/Disable triaedra display" << endl;
+	cout << "[s] - reset all" << endl;
 	cout << "[r] - reset position of the sphere" << endl;
 	cout << "[ESC] - Exit application" << endl;
 	cout << endl << endl;
@@ -341,7 +396,7 @@ int main(int argc, char* argv[])
 	windowW = (int)(0.8 * screenH);
 	windowH = (int)(0.5 * screenH);
 	windowPosY = (screenH - windowH) / 2;
-	windowPosX = windowPosY;
+	windowPosX = (screenW - windowW) / 2;
 
 	// initialize the OpenGL GLUT window
 	glutInitWindowPosition(windowPosX, windowPosY);
@@ -471,7 +526,24 @@ int main(int argc, char* argv[])
 	world->addChild(sphere);
 
 	// set position of the sphere
-	sphere->setLocalPos(0.00, -0.23, 0.0);//(-0.05, -0.18, 0.0);
+	if (mode_j == 1) {
+		sphere->setLocalPos(0.00, -0.23, 0.0);
+	}
+	if (mode_j == 2) {
+		sphere->setLocalPos(0.02, 0.0, 0.0);
+	}
+	posref = sphere->getLocalPos();
+
+	//pose la cible
+	cible = new cShapeSphere(SPHERE_RADIUS * 2);
+	if (mode_j == 1) {
+		cible->setLocalPos(0.00, 0.23, 0.0);
+	}
+	if (mode_j == 2) {
+		cible->setLocalPos(-0.4, 0.0, 0.0);
+	}
+	cible->m_material->setRed();
+	world->addChild(cible);
 
 	// set color of the sphere
 	sphere->m_material->setBlueDark();
@@ -495,7 +567,8 @@ int main(int argc, char* argv[])
 	world->addChild(bigMagnetFieldVector);
 	world->addChild(magnetFieldVector);
 	world->addChild(speedVector);
-	world->addChild(forceVector);
+	world->addChild(forceVector);//oups
+	//speedVector->addChild(forceVector);
 
 	//--------------------------------------------------------------------------
 	// BARS
@@ -517,14 +590,6 @@ int main(int argc, char* argv[])
 	// WIDGETS
 	//--------------------------------------------------------------------------
 
-	// create a font
-	cFont *font = NEW_CFONTCALIBRI20();
-
-	// create a label to display variable values of the simulation
-	labelInfo = new cLabel(font);
-	labelInfo->m_fontColor.setRed();
-	camera->m_frontLayer->addChild(labelInfo);
-	
 	// create a background
 	cBackground* background = new cBackground();
 	camera->m_backLayer->addChild(background);
@@ -535,7 +600,7 @@ int main(int argc, char* argv[])
 	// load background image
 	bool fileload = loadImage(background, "background.png");
 	if (!fileload) { return (-1); }
-	
+
 	// create panels for the GUI
 	pan1 = new cPanel();
 	pan1->setColor(backgroundColor);
@@ -545,6 +610,46 @@ int main(int argc, char* argv[])
 	pan2->setColor(panelColor);
 	pan2->setTransparencyLevel(0.5f);
 	camera->m_frontLayer->addChild(pan2);
+
+	pan3 = new cPanel();
+	pan3->setColor(panelColor);
+	camera->m_frontLayer->addChild(pan3);
+
+	pan4 = new cPanel();
+	pan4->setColor(blackColor);
+	pan3->addChild(pan4);
+
+	// create fonts
+	//cFont *font = new cFont();
+	//fileload = font->loadFromFile(RESOURCE_PATH("../resources/earthorbiter20b.fnt"));
+	cFontPtr titleFont_pt = cFontPtr(new cFont());
+	fileload = titleFont_pt->loadFromFile(RESOURCE_PATH("../resources/earthorbiter72b.fnt"));
+	cFontPtr font = NEW_CFONTCALIBRI20();
+	if (!fileload)
+	{
+		cout << "Error - Font failed to load correctly." << endl;
+		close();
+		return (-1);
+	}
+
+	// create a label with a small message
+	labelMessage = new cLabel(titleFont_pt);
+	camera->m_frontLayer->addChild(labelMessage);
+	// set font color
+	labelMessage->m_fontColor.setWhite();
+	// set text message
+	labelMessage->setText("MAGNETICA");
+	//labelMessage->s
+
+	// create a label to display variable values of the simulation
+	labelInfo = new cLabel(font);
+	labelInfo->m_fontColor.setRed();
+	pan4->addChild(labelInfo);
+
+	//create a label to display game over
+	go = new cLabel(font);
+	go->m_fontColor.setWhite();
+	camera->m_frontLayer->addChild(go);
 
 	// create gauges to graphically represent variable values of the simulation
 	cBitmap* icon1 = new cBitmap();
@@ -670,6 +775,45 @@ void resizeWindow(int w, int h)
 
 //------------------------------------------------------------------------------
 
+void reset() {
+	world->clearAllChildren();
+	world->addChild(camera);
+	world->addChild(light);
+	world->addChild(light2);
+	world->addChild(sphere);
+	world->addChild(cible);
+	world->addChild(bigMagnetFieldVector);
+	world->addChild(magnetFieldVector);
+	world->addChild(speedVector);
+	world->addChild(forceVector);
+	sphere->setAcceleration(0.0, 0.0, 0.0);
+	sphere->setSpeed(0.0, 0.0, 0.0);
+	if (mode_j == 1) {
+		sphere->setLocalPos(0.0, -0.23, 0.0);
+		posref = cVector3d(0.0, -0.23, 0.0);
+	}
+	if (mode_j == 2) {
+		sphere->setLocalPos(0.02, 0.0, 0.0);
+		posref = cVector3d(0.02, 0.0, 0.0);
+	}
+	world->addChild(magnetField);
+	nbTraj = 0;
+	if (nbvisees == 20 && !gogo) {//fin de la partie
+		gogo = true;
+		mode_j = 3 - mode_j;
+		if (mode_j == 1) {
+			cible->setLocalPos(0.00, 0.23, 0.0);
+		}
+		if (mode_j == 2) {
+			cible->setLocalPos(-0.4, 0.0, 0.0);
+		}
+		sphere->setMass(0.04);
+		sphere->setCharge(0.5);
+		magnetField->setCurrentIntensity(0.25);
+		reset();
+	}
+}
+
 void keySelect(unsigned char key, int x, int y)
 {
 	// option ESC: exit
@@ -708,17 +852,33 @@ void keySelect(unsigned char key, int x, int y)
 		forceVector->setEnabled(triaedraDisplay, true);
 	}
 
+	if (key == 'b')
+	{
+		BVDisplay = !BVDisplay;
+		bigMagnetFieldVector->setEnabled(BVDisplay, true);
+	}
+
 	// option r: reset position of the sphere
 	if (key == 'r')
 	{
-		/*
-		if(++resetCount % 10 == 0)
-			sphere->setLocalPos(0.0, 0.0, 0.0);
-		else
-		*/
-		sphere->setLocalPos(0.00, -0.23, FRAND(-0.05, 0.2));//(-0.05, -0.18, FRAND(-0.05, 0.2));
-		sphere->setSpeed(0.0, 0.0, 0.0);
-		sphere->setAcceleration(0.0, 0.0, 0.0);
+		reset();
+	}
+
+	// option s: reset all (including score, charge, mass and field)
+	if (key == 's')
+	{
+		nbvisees = 0;
+		nbtouches = 0;
+		if (mode_j == 1) {
+			cible->setLocalPos(0.00, 0.23, 0.0);
+		}
+		if (mode_j == 2) {
+			cible->setLocalPos(-0.4, 0.0, 0.0);
+		}
+		reset();
+		sphere->setMass(0.04);
+		sphere->setCharge(0.5);
+		magnetField->setCurrentIntensity(0.25);
 	}
 
 	// option c: start camera movement
@@ -820,14 +980,193 @@ void close(void)
 
 //------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
+const cVector3d testSpeed = cVector3d(0.0, 0.0, 0.0);
+queue<cShapeSphere*> traj;
+queue<cShapeSphere*> visee;
+cShapeSphere *v;
+cMagnetSphere *rayon;
+bool rayonex = false;
+
 void graphicsTimer(int data)
 {
+	cShapeSphere *a;
 	if (simulationRunning)
 	{
 		glutPostRedisplay();
 	}
 
 	glutTimerFunc(50, graphicsTimer, 0);
+	/*if (mode_j == 1){
+	if (!sphereFce.equals(testSpeed, 0.000000001f)){
+	if (!rayonex){
+	double v2 = sphere->getSpeed().x()*sphere->getSpeed().x() + sphere->getSpeed().y()*sphere->getSpeed().y() + sphere->getSpeed().z()*sphere->getSpeed().z();
+	double Fce = sqrt(sphereFce.x()*sphereFce.x() + sphereFce.y()*sphereFce.y() + sphereFce.z()*sphereFce.z());
+	rayon = new cMagnetSphere(sphere->getMass()* v2 / Fce, 0, 0, SPHERE_DAMPING);
+	double cenx = sphere->getLocalPos().x() + rayon->getRadius()*sphereFce.x() / Fce;
+	double ceny = sphere->getLocalPos().y() + rayon->getRadius()*sphereFce.y() / Fce;
+	double cenz = sphere->getLocalPos().z() + rayon->getRadius()*sphereFce.z() / Fce;
+	rayon->setLocalPos(cenx, ceny, cenz);
+	rayon->setTransparencyLevel(0.45);
+	world->addChild(rayon);
+	rayonex = true;
+	}
+	}
+	else{
+	if (rayonex){
+	world->deleteChild(rayon);
+	rayonex = false;
+	}
+	}
+	}*/
+
+	if (sphere->getLocalPos().y() > 0.3) {
+		reset();
+	}
+	if (sphere->getLocalPos().x() > 0.1) {
+		reset();
+	}
+	if (sphere->getLocalPos().x() < -0.4) {
+		reset();
+	}
+	if (sphere->getLocalPos().z() > 0.18) {
+		reset();
+	}
+	if (sphere->getLocalPos().y() < -0.3) {
+		reset();
+	}
+	if (sphere->getLocalPos().z() < -0.18) {
+		reset();
+	}
+	if (sphere->getLocalPos().equals(posref, 0.005)) {
+		if (mode_j == 2) {
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.02 + devicePos.x(), 0.0 + devicePos.y(), 0.0 + devicePos.z());
+			v->m_material->setBlueDark();
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.02 + devicePos.x() / 2, 0.0 + devicePos.y() / 2, 0.0 + devicePos.z() / 2);
+			v->m_material->setBlueDark();
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.02 + devicePos.x() / 4, 0.0 + devicePos.y() / 4, 0.0 + devicePos.z() / 4);
+			v->m_material->setBlueDark();
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.02 + devicePos.x() * 3 / 4, 0.0 + devicePos.y() * 3 / 4, 0.0 + devicePos.z() * 3 / 4);
+			v->m_material->setBlueDark();
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.02, 0.0 + devicePos.y(), 0.0 + devicePos.z());
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.02, 0.0 + devicePos.y() / 2, 0.0 + devicePos.z() / 2);
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.02, 0.0 + devicePos.y() / 4, 0.0 + devicePos.z() / 4);
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.02, 0.0 + devicePos.y() * 3 / 4, 0.0 + devicePos.z() * 3 / 4);
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.02 + devicePos.x(), 0.0, 0.0);
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.02 + devicePos.x() / 2, 0.0, 0.0);
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.02 + devicePos.x() / 4, 0.0, 0.0);
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.02 + devicePos.x() * 3 / 4, 0.0, 0.0);
+			world->addChild(v);
+			visee.push(v);
+			while (visee.size() > 12) {
+				v = visee.front();
+				visee.pop();
+				world->deleteChild(v);
+			}
+		}
+		if (mode_j == 1) {
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.00, -0.23 + devicePos.y(), 0.0 + devicePos.z());
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.00, -0.23 + devicePos.y() / 2, 0.0 + devicePos.z() / 2);
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.00, -0.23 + devicePos.y() / 4, 0.0 + devicePos.z() / 4);
+			world->addChild(v);
+			visee.push(v);
+			v = new cShapeSphere(SPHERE_RADIUS / 5);
+			v->setLocalPos(0.00, -0.23 + devicePos.y() * 3 / 4, 0.0 + devicePos.z() * 3 / 4);
+			world->addChild(v);
+			visee.push(v);
+			while (visee.size() > 4) {
+				v = visee.front();
+				visee.pop();
+				world->deleteChild(v);
+			}
+		}
+	}
+	else {
+		while (visee.size() > 0) {
+			v = visee.front();
+			visee.pop();
+			world->deleteChild(v);
+		}
+		if (sphere->getLocalPos().equals(cible->getLocalPos(), 0.01)) {
+			nbtouches += 1;
+			if (mode_j == 1) {
+				cible->setLocalPos(0.00, FRAND(0.0, 0.27), FRAND(-0.15, 0.15));
+			}
+			if (mode_j == 2) {
+				cible->setLocalPos(-0.4, FRAND(-0.084, 0.084), FRAND(-0.084, 0.084));
+			}
+			reset();
+		}
+	}
+	if (nbTraj == 0)
+	{
+		while (!traj.empty())
+		{
+			traj.pop();
+		}
+	}
+	if ((nbTraj < 50) && !(sphere->getSpeed().equals(testSpeed)))
+	{
+		a = new cShapeSphere(SPHERE_RADIUS / 10);
+		a->setLocalPos(sphere->getLocalPos());
+		world->addChild(a);
+		traj.push(a);
+		nbTraj += 1;
+		if (nbTraj == 3) {
+			nbvisees += 1;
+		}
+	}
+	if ((nbTraj == 50) && !(sphere->getSpeed().equals(testSpeed)))
+	{
+		a = traj.front();
+		traj.pop();
+		world->deleteChild(a);
+		a = new cShapeSphere(SPHERE_RADIUS / 10);
+		a->setLocalPos(sphere->getLocalPos());
+		world->addChild(a);
+		traj.push(a);
+	}
 }
 
 //------------------------------------------------------------------------------
@@ -842,10 +1181,11 @@ void updateGraphics(void)
 	magnetFieldVector->setLocalPos(sphere->getLocalPos());
 
 	speedVector->setLocalPos(sphere->getLocalPos());
-	speedVector->updateArrow(sphere_speed, 0.23);
+	speedVector->updateArrow(sphere_speed, 0.08);//0.23);//pb1
 
 	forceVector->setLocalPos(sphere->getLocalPos());
-	forceVector->updateArrow(sphere_force, 3.0);
+	forceVector->updateArrow(sphere_force, 1.0);//3.0);
+	//forceVector->updateArrow(devicePos, 1.0);
 
 	// move the camera
 	if (camera->isInMovement())
@@ -881,19 +1221,49 @@ void updateGraphics(void)
 	/////////////////////////////////////////////////////////////////////
 
 	// update variable values
-	labelInfo->setText(cStr(sphere_force.length()) + " | field opacity : " + cStr(magnetField->getTransparency() * 100) + "% | sphere mass : " + cStr(sphere->getMass()) + " kg | sphere charge : " + cStr(sphere->getCharge()) + " C | current intensity : " + cStr(magnetField->getCurrentIntensity()) + " A");
-
+	labelInfo->setText(cStr(nbtouches));
+	//cStr(sphere_force.length())//cStr(atan2(-devicePos.x(), devicePos.y()))
+	//"field opacity : " + cStr(magnetField->getTransparency() * 100) + "% | sphere mass : " + cStr(sphere->getMass()) + " kg | sphere charge : " + cStr(sphere->getCharge()) + " C | current intensity : " + cStr(magnetField->getCurrentIntensity()) + " A"
+	
 	// update position of info label
-	labelInfo->setLocalPos(0.5 * (windowW - labelInfo->getWidth()), 15);
+	labelInfo->setLocalPos(15, 15);
+
+	// update position of message label
+	labelMessage->setLocalPos(0.2 * windowW, 0.825 * windowH - 36);
+
+	//update position of game over label
+	go->setLocalPos((int)(0.5*(windowW - go->getWidth())), 30);
+	if (gogo) {
+		go->setText(gost());
+	}
+	else {
+		go->setText("");
+	}
+
+	//reset score
+	if (nbvisees > 20) {
+		nbvisees = 1;
+		nbtouches = 0;
+		gogo = false;
+	}
+
+	if (sphere->getSpeed().equals(testSpeed) && !sphere->getLocalPos().equals(posref)) {
+		reset();
+	}
 
 	// set width and height of panels
 	pan1->setSize(windowW * 0.7, windowH * 0.8);
 	pan1->setCornerRadius(0, windowH * 0.1, windowH * 0.1, 0);
 	pan2->setSize(windowW * 0.2, windowH);
+	pan3->setSize(windowW * 0.1, windowH * 0.1);
+	pan3->setCornerRadius(windowH * 0.017, windowH * 0.017, windowH * 0.017, windowH * 0.017);
+	pan4->setSize(windowW * 0.1 - windowH * 0.033, windowH * 0.067);
 
 	// assign a position (x,y) to panels
 	pan1->setLocalPos(windowW * 0.05, windowH * 0.05);
 	pan2->setLocalPos(windowW * 0.775, 0);
+	pan3->setLocalPos(windowW * 0.35, 0.0);
+	pan4->setLocalPos(windowH * 0.017, windowH * 0.017);
 
 	// update positions and dimensions of gauges
 	masseGauge->update(windowW * 0.2, windowH, windowH * 0.4, 3);
@@ -961,9 +1331,9 @@ void updateHaptics(void)
 
 	// calibrate device (if necessary)
 	hapticDevice->calibrate();
-
-	// store the current position of the haptic device
-	cVector3d devicePos(0.0, 0.0, 0.0);
+	
+	// store the current position of the haptic device//jp
+	//cVector3d devicePos(0.0, 0.0, 0.0);
 
 	// store the force the user applies to the haptic device
 	cVector3d userForce(0.0, 0.0, 0.0);//mq
@@ -1011,22 +1381,99 @@ void updateHaptics(void)
 		// READ HAPTIC DEVICE
 		/////////////////////////////////////////////////////////////////////////
 
+		//parametres
+		hapticDevice->getUserSwitch(1, parMoins);
+		hapticDevice->getUserSwitch(3, parPlus);
+		hapticDevice->getUserSwitch(2, param);
+		if (param) {
+			if (!np) {
+				npar += 1;
+				if (npar > 3) {
+					npar = 0;
+				}
+				np = true;
+			}
+		}
+		else {
+			if (np) {
+				np = false;
+			}
+		}
+		if (parPlus) {
+			if (!pp) {
+				if (npar == 0) {
+					magnetField->setTransparency(magnetField->getTransparency() + 0.05);
+				}
+				if (npar == 1) {
+					sphere->setCharge(sphere->getCharge() + 0.5);
+					if (sphere->getCharge() == 0) {
+						sphere->setCharge(0.5);
+					}
+				}
+				if (npar == 2) {
+					sphere->setMass(sphere->getMass() + 0.01);
+				}
+				if (npar == 3) {
+					magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() + 0.1);
+				}
+				pp = true;
+			}
+		}
+		else {
+			if (pp) {
+				pp = false;
+			}
+		}
+		if (parMoins) {
+			if (!pm) {
+				if (npar == 0) {
+					magnetField->setTransparency(magnetField->getTransparency() - 0.05);
+				}
+				if (npar == 1) {
+					sphere->setCharge(sphere->getCharge() - 0.5);
+					if (sphere->getCharge() == 0) {
+						sphere->setCharge(-0.5);
+					}
+				}
+				if (npar == 2) {
+					sphere->setMass(sphere->getMass() - 0.01);
+					if (sphere->getMass() <= 0) {
+						sphere->setMass(0.01);
+					}
+				}
+				if (npar == 3) {
+					magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() - 0.1);
+				}
+				pm = true;
+			}
+		}
+		else {
+			if (pm) {
+				pm = false;
+			}
+		}
+
 		// read device position
 		hapticDevice->getPosition(devicePos);
-		devicePos.x(0.0);
 
 		// read sphere position
 		cVector3d position(sphere->getLocalPos());
 
 		// get sphere velocity from user
-		cVector3d userVel(userMovex, userMovey, userMovez);
+		//cVector3d userVel(userMovex, userMovey, userMovez);
 		/*
 		if (resetCount == 0 || resetCount % 10 != 0)
 			userVel = userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
 		else
 			userVel = userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
 		*/
-		userVel = userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
+		//userVel = userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
+
+		// get sphere velocity from user
+		cVector3d userVel(devicePos.x()*0.001, devicePos.y()*0.001, devicePos.z()*0.001);//pb1
+		if (mode_j == 1) {
+			userVel = (userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection());
+		}
 
 		// limit the velocity maximal that the user can give to the sphere
 		if (userVel.length() > 0.0008)
@@ -1082,11 +1529,23 @@ void updateHaptics(void)
 		sphere_force = sphereFce;//fusionner les 2 vars?
 
 		// compute acceleration
-		sphere->setAcceleration((sphereFce + userForce) / sphere->getMass());//(sphereFce / sphere->getMass());//mq
+		sphere->setAcceleration(sphereFce / sphere->getMass());//sphere->setAcceleration((sphereFce + userForce) / sphere->getMass());//mqq
 
 		// compute velocity
-		cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());
-		sphere->setSpeed(newVel);
+		bool testButtonTir;
+		hapticDevice->getUserSwitch(0, testButtonTir);
+		if (!sphere->getLocalPos().equals(posref, 0.005)) {
+
+			cVector3d newVel(sphere->getSpeed() + timeInterval * sphere->getAcceleration());
+			sphere->setSpeed(newVel);
+		}
+		else {
+			if (testButtonTir) {
+				cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());
+				sphere->setSpeed(newVel);
+			}
+		}
+
 		sphere_speed = sphere->getSpeed();
 
 		// compute position
@@ -1124,7 +1583,10 @@ void updateHaptics(void)
 			forceToApply.zero();
 		}
 
-		hapticDevice->setForce(forceToApply);
+		if (mode_j > 2)//pb1
+		{
+			hapticDevice->setForce(forceToApply);
+		}
 
 		
 	}
@@ -1157,36 +1619,5 @@ bool loadImage(cBitmap* a_image, const string a_filename)
 	}
 	return fileload;
 }
-
-/*
-void logData(vector<double> data, double interval, string filename)
-
-{
-	filename = "../../projetIJL/GLUT/ForceDeLorentz/" + filename;
-
-	ofstream file(filename, ios::out | ios::trunc);
-	
-	char sep = 9;
-	if (!file)
-	{
-		cout << "l'ouverture du fichier " << filename << " a échoué." << endl;
-		return;
-	}
-
-	for (int i = 0; i < data.size(); i++)
-	{
-		file << data[i] << sep << i * interval << endl;
-	}
-
-	file.close();
-}
-*/
-
-// TODO
-// ajuster les valeurs des paramètres correctement
-// permettre de compenser la force de Laplace avec le bras
-// démo en 2 temps : - utilisateur 1 fait entrer la particule dans le champs et observe le changement de trajectoire (plusieurs essais)
-//                   - même chose sauf que utilisateur 2 essaye de compenser la force de Laplace pour permettre à l'utilisateur 1 de traverser en ligne droite le champs
-//                       (dessiner une ligne montrant la trajectoire à suivre)
 
 //------------------------------------------------------------------------------

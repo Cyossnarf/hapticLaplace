@@ -291,8 +291,8 @@ void chai3d::cMobileCam::renderView_custom(const int a_VPx,
 		{
 			renderLayer(m_backLayer,
 				a_windowWidth,//marqueur
-				a_windowHeight,
-				a_displayContext);
+				a_windowHeight);
+				//a_displayContext);//mq_maj
 		}
 
 		// clear depth buffer
@@ -516,7 +516,7 @@ void chai3d::cMobileCam::renderView_custom(const int a_VPx,
 					//--------------------------------------------------------------
 
 					// setup rendering options
-					options.m_displayContext = a_displayContext;
+					//options.m_displayContext = a_displayContext;//mq_maj
 					options.m_camera = this;
 					options.m_single_pass_only = false;
 					options.m_render_opaque_objects_only = true;
@@ -636,7 +636,7 @@ void chai3d::cMobileCam::renderView_custom(const int a_VPx,
 				else
 				{
 					// setup rendering options for first pass
-					options.m_displayContext = a_displayContext;
+					//options.m_displayContext = a_displayContext;//mq_maj
 					options.m_camera = this;
 					options.m_single_pass_only = false;
 					options.m_render_opaque_objects_only = true;
@@ -687,7 +687,7 @@ void chai3d::cMobileCam::renderView_custom(const int a_VPx,
 				if (useShadowCasting)
 				{
 					// setup rendering options for single pass
-					options.m_displayContext = a_displayContext;
+					//options.m_displayContext = a_displayContext;//mq_maj
 					options.m_camera = this;
 					options.m_single_pass_only = true;
 					options.m_render_opaque_objects_only = true;
@@ -750,7 +750,7 @@ void chai3d::cMobileCam::renderView_custom(const int a_VPx,
 				else
 				{
 					// setup rendering options for single pass
-					options.m_displayContext = a_displayContext;
+					//options.m_displayContext = a_displayContext;//mq_maj
 					options.m_camera = this;
 					options.m_single_pass_only = true;
 					options.m_render_opaque_objects_only = false;
@@ -789,8 +789,8 @@ void chai3d::cMobileCam::renderView_custom(const int a_VPx,
 		{
 			renderLayer(m_frontLayer,
 				a_windowWidth,//marqueur
-				a_windowHeight,
-				a_displayContext);
+				a_windowHeight);
+				//a_displayContext);//mq_maj
 		}
 
 		// if requested, display reset has now been completed

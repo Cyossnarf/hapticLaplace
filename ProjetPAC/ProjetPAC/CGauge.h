@@ -12,7 +12,7 @@ namespace chai3d {
 
 	public:
 
-		cGauge(cFont* a_font, const std::string a_text, cBitmap* a_icon, cBitmap* a_icon2, const int a_id, const bool a_double = false);
+		cGauge(cFontPtr a_font, const std::string a_text, cBitmap* a_icon, cBitmap* a_icon2, const int a_id, const bool a_double = false);
 
 		void update(const double a_frameWidth,
 			const double a_upBoundary,
