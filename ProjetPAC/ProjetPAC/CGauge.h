@@ -19,6 +19,8 @@ namespace chai3d {
 			const double a_downBoundary,
 			const int a_gaugesNumber);
 
+		inline void setValue(double a_value) { m_value = a_value; }
+
 	private:
 
 		int m_id;

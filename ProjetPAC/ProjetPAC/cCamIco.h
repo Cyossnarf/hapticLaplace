@@ -12,7 +12,7 @@ namespace chai3d {
 
 	public:
 
-		cCamIco(cFont* a_font, const std::string a_text, cBitmap* a_icon, cBitmap* a_icon2, const int a_id, const bool a_double = false);
+		cCamIco(cFontPtr a_font, const std::string a_text, cBitmap* a_icon, cBitmap* a_icon2, const int a_id, const bool a_double = false);
 
 		void update(const double a_frameWidth,
 			const double a_upBoundary,

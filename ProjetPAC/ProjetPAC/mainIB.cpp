@@ -48,6 +48,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "CMobileCam.h"
 #include "CArrow.h"
 #include "CGauge.h"
+#include "cCamIco.h"
 #include "AntTweakBar.h"
 #include <cstdlib>
 #include <ctime>
@@ -124,8 +125,10 @@ const double HAPTIC_STIFFNESS = 1000.0;//jp
 // colors
 const cColorf backgroundColor = cColorf(52 / 255.f, 48 / 255.f, 71 / 255.f);
 const cColorf panelColor = cColorf(125 / 255.f, 117 / 255.f, 164 / 255.f);
-const cColorf metalColor = cColorf(192 / 255.f, 192 / 255.f, 192 / 255.f);
 const cColorf blackColor = cColorf(8 / 255.f, 9 / 255.f, 16 / 255.f);
+const cColorf panelSelectedColor = cColorf(175 / 255.f, 117 / 255.f, 164 / 255.f);
+const cColorf lvlColor = cColorf(255.f, 255.f, 255.f);
+const cColorf lvlSelectedColor = cColorf(255.f, 255.f, 255.f);
 
 
 //------------------------------------------------------------------------------
@@ -192,6 +195,8 @@ cPanel* pan4;
 cGauge* masseGauge;
 cGauge* chargeGauge;
 cGauge* intensiteGauge;
+cGauge* opacityGauge;
+cCamIco* viewGauge;
 
 // indicates if the haptic simulation currently running
 bool simulationRunning = false;
@@ -263,6 +268,12 @@ bool parMoins;
 bool pm = false;
 bool pp = false;
 bool np = false;
+
+//affichage infos hors jeu
+bool tirpossible = false;
+bool tirpossiblef = false;
+int pinfocount = -1;
+int infocount = -1;
 
 // Ce qui suit est utilisé pour l'affichage du GUI
 // C'est un peu bizarre parce qu'on devrait logiquement appeler des attributs des objets magnetsphere et magnetfield
@@ -567,8 +578,7 @@ int main(int argc, char* argv[])
 	world->addChild(bigMagnetFieldVector);
 	world->addChild(magnetFieldVector);
 	world->addChild(speedVector);
-	world->addChild(forceVector);//oups
-	//speedVector->addChild(forceVector);
+	world->addChild(forceVector);
 
 	//--------------------------------------------------------------------------
 	// BARS
@@ -658,7 +668,8 @@ int main(int argc, char* argv[])
 	fileload = fileload && loadImage(icon2, "plume.png");
 	if (!fileload) { return (-1); }
 	masseGauge = new cGauge(font, "Masse de la particule", icon1, icon2, 0);
-	masseGauge->setColor(panelColor);
+	masseGauge->setColor(panelSelectedColor);
+	masseGauge->setValue(sphere->getMass() / 0.35);
 	pan2->addChild(masseGauge);
 
 	icon1 = new cBitmap();
@@ -668,6 +679,7 @@ int main(int argc, char* argv[])
 	if (!fileload) { return (-1); }
 	chargeGauge = new cGauge(font, "Charge de la particule", icon1, icon2, 1, true);
 	chargeGauge->setColor(panelColor);
+	chargeGauge->setValue(sphere->getCharge() / 5);
 	pan2->addChild(chargeGauge);
 
 	icon1 = new cBitmap();
@@ -677,7 +689,67 @@ int main(int argc, char* argv[])
 	if (!fileload) { return (-1); }
 	intensiteGauge = new cGauge(font, "Intensite du champ magnetique", icon1, icon2, 2);
 	intensiteGauge->setColor(panelColor);
+	intensiteGauge->setValue(magnetField->getCurrentIntensity() / 5);
 	pan2->addChild(intensiteGauge);
+
+	icon1 = new cBitmap();
+	fileload = loadImage(icon1, "opaque.png");
+	icon2 = new cBitmap();
+	fileload = fileload && loadImage(icon2, "transparent.png");
+	if (!fileload) { return (-1); }
+	opacityGauge = new cGauge(font, "Opacite du champ magnetique", icon1, icon2, 3);
+	opacityGauge->setColor(panelColor);
+	opacityGauge->setValue(magnetField->getTransparency());
+	pan2->addChild(opacityGauge);
+
+	icon1 = new cBitmap();
+	fileload = loadImage(icon1, "cube2.png");
+	icon2 = new cBitmap();
+	fileload = fileload && loadImage(icon2, "cube1.png");
+	if (!fileload) { return (-1); }
+	viewGauge = new cCamIco(font, "Point de vue de la camera", icon1, icon2, 4, false);
+	viewGauge->setColor(panelColor);
+	viewGauge->setValue(false);
+	pan2->addChild(viewGauge);
+
+	//crée des panels pour l'information
+	cPanel* pan32 = new cPanel();
+	pan32->setColor(panelColor);
+	cBitmap* info0 = new cBitmap();
+	cBitmap* info1 = new cBitmap();
+	cBitmap* info2 = new cBitmap();
+	cBitmap* info3 = new cBitmap();
+	cBitmap* info4 = new cBitmap();
+	cBitmap* info5 = new cBitmap();
+	cBitmap* info6 = new cBitmap();
+	cBitmap* info7 = new cBitmap();
+	bool infosc = loadImage(info1, "info1.png");
+	infosc = loadImage(info2, "info2.png");
+	infosc = loadImage(info3, "info3.png");
+	infosc = loadImage(info4, "info4.png");
+	infosc = loadImage(info5, "info5.png");
+	infosc = loadImage(info6, "info6.png");
+	infosc = loadImage(info7, "info7.png");
+	infosc = loadImage(info0, "info0.png");
+	pan32->addChild(info1);
+	pan32->addChild(info2);
+	pan32->addChild(info3);
+	pan32->addChild(info4);
+	pan32->addChild(info5);
+	pan32->addChild(info6);
+	pan32->addChild(info7);
+	pan32->addChild(info0);
+	info1->setEnabled(false);
+	info2->setEnabled(false);
+	info3->setEnabled(false);
+	info4->setEnabled(false);
+	info5->setEnabled(false);
+	info6->setEnabled(false);
+	info7->setEnabled(false);
+	camera->m_frontLayer->addChild(pan32);
+	cPanel* pan42 = new cPanel();
+	pan4->setEnabled(false, true);
+	camera->m_frontLayer->addChild(pan42);
 
 
 	//--------------------------------------------------------------------------
@@ -803,9 +875,15 @@ void reset() {
 		mode_j = 3 - mode_j;
 		if (mode_j == 1) {
 			cible->setLocalPos(0.00, 0.23, 0.0);
+			tirpossible = false;
+			cPanel* pan = (cPanel*)camera->m_frontLayer->getChild(4);
+			pan->getChild(7)->setEnabled(true, true);
 		}
 		if (mode_j == 2) {
 			cible->setLocalPos(-0.4, 0.0, 0.0);
+			tirpossible = false;
+			cPanel* pan = (cPanel*)camera->m_frontLayer->getChild(4);
+			pan->getChild(4)->setEnabled(true, true);
 		}
 		sphere->setMass(0.04);
 		sphere->setCharge(0.5);
@@ -1266,9 +1344,11 @@ void updateGraphics(void)
 	pan4->setLocalPos(windowH * 0.017, windowH * 0.017);
 
 	// update positions and dimensions of gauges
-	masseGauge->update(windowW * 0.2, windowH, windowH * 0.4, 3);
-	chargeGauge->update(windowW * 0.2, windowH, windowH * 0.4, 3);
-	intensiteGauge->update(windowW * 0.2, windowH, windowH * 0.4, 3);
+	masseGauge->update(windowW * 0.2, windowH, windowH * 0.4, 5);
+	chargeGauge->update(windowW * 0.2, windowH, windowH * 0.4, 5);
+	intensiteGauge->update(windowW * 0.2, windowH, windowH * 0.4, 5);
+	opacityGauge->update(windowW * 0.2, windowH, windowH * 0.4, 5);
+	viewGauge->update(windowW * 0.2, windowH, windowH * 0.4, 5);
 	
 	/////////////////////////////////////////////////////////////////////
 	// RENDER SCENE
@@ -1388,8 +1468,28 @@ void updateHaptics(void)
 		if (param) {
 			if (!np) {
 				npar += 1;
-				if (npar > 3) {
+				if (npar > 4) {
 					npar = 0;
+				}
+				if (npar == 0) {
+					masseGauge->setColor(panelSelectedColor);
+					viewGauge->setColor(panelColor);
+				}
+				if (npar == 1) {
+					masseGauge->setColor(panelColor);
+					chargeGauge->setColor(panelSelectedColor);
+				}
+				if (npar == 2) {
+					intensiteGauge->setColor(panelSelectedColor);
+					chargeGauge->setColor(panelColor);
+				}
+				if (npar == 3) {
+					intensiteGauge->setColor(panelColor);
+					opacityGauge->setColor(panelSelectedColor);
+				}
+				if (npar == 4) {
+					viewGauge->setColor(panelSelectedColor);
+					opacityGauge->setColor(panelColor);
 				}
 				np = true;
 			}
@@ -1401,20 +1501,42 @@ void updateHaptics(void)
 		}
 		if (parPlus) {
 			if (!pp) {
-				if (npar == 0) {
+				if (npar == 3) {
 					magnetField->setTransparency(magnetField->getTransparency() + 0.05);
+					opacityGauge->setValue(magnetField->getTransparency());
 				}
 				if (npar == 1) {
 					sphere->setCharge(sphere->getCharge() + 0.5);
+					if (sphere->getCharge() > 5) {
+						sphere->setCharge(5);
+					}
 					if (sphere->getCharge() == 0) {
 						sphere->setCharge(0.5);
 					}
+					chargeGauge->setValue(sphere->getCharge() / 5);
+				}
+				if (npar == 0) {
+					sphere->setMass(sphere->getMass() + 0.01);
+					if (sphere->getMass() > 0.35) {
+						sphere->setMass(0.35);
+					}
+					masseGauge->setValue(sphere->getMass() / 0.35);
 				}
 				if (npar == 2) {
-					sphere->setMass(sphere->getMass() + 0.01);
+					magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() + 0.5);
+					if (magnetField->getCurrentIntensity() > 5) {
+						magnetField->setCurrentIntensity(5);
+					}
+					if (magnetField->getCurrentIntensity() == 0) {
+						magnetField->setCurrentIntensity(0.5);
+					}
+					intensiteGauge->setValue(magnetField->getCurrentIntensity() / 5);
 				}
-				if (npar == 3) {
-					magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() + 0.1);
+				if (npar == 4) {
+					if (!camera->isInMovement()) {
+						camera->setInMovement();
+						viewGauge->setValue(!viewGauge->getValue());
+					}
 				}
 				pp = true;
 			}
@@ -1426,23 +1548,42 @@ void updateHaptics(void)
 		}
 		if (parMoins) {
 			if (!pm) {
-				if (npar == 0) {
+				if (npar == 4) {
+					if (!camera->isInMovement()) {
+						camera->setInMovement();
+						viewGauge->setValue(!viewGauge->getValue());
+					}
+				}
+				if (npar == 3) {
 					magnetField->setTransparency(magnetField->getTransparency() - 0.05);
+					opacityGauge->setValue(magnetField->getTransparency());
 				}
 				if (npar == 1) {
 					sphere->setCharge(sphere->getCharge() - 0.5);
 					if (sphere->getCharge() == 0) {
 						sphere->setCharge(-0.5);
 					}
+					if (sphere->getCharge() < -5) {
+						sphere->setCharge(-5);
+					}
+					chargeGauge->setValue(sphere->getCharge() / 5);
 				}
-				if (npar == 2) {
+				if (npar == 0) {
 					sphere->setMass(sphere->getMass() - 0.01);
 					if (sphere->getMass() <= 0) {
 						sphere->setMass(0.01);
 					}
+					masseGauge->setValue(sphere->getMass() / 0.35);
 				}
-				if (npar == 3) {
-					magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() - 0.1);
+				if (npar == 2) {
+					magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() - 0.5);
+					if (magnetField->getCurrentIntensity() < -5) {
+						magnetField->setCurrentIntensity(-5);
+					}
+					if (magnetField->getCurrentIntensity() == 0) {
+						magnetField->setCurrentIntensity(-0.5);
+					}
+					intensiteGauge->setValue(magnetField->getCurrentIntensity() / 5);
 				}
 				pm = true;
 			}
@@ -1540,9 +1681,62 @@ void updateHaptics(void)
 			sphere->setSpeed(newVel);
 		}
 		else {
-			if (testButtonTir) {
+			if (testButtonTir && tirpossible) {
 				cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());
 				sphere->setSpeed(newVel);
+			}
+			if (testButtonTir && !tirpossible) {
+				if (infocount == pinfocount) {
+					infocount += 1;
+					cPanel* pan = (cPanel*)camera->m_frontLayer->getChild(4);
+					if (infocount > 7) {
+						infocount = -1;
+					}
+					if (infocount == -1) {
+						pan->getChild(7)->setEnabled(true, true);
+					}
+					if (infocount == 0) {
+						pan->getChild(7)->setEnabled(false, true);
+						pan->getChild(0)->setEnabled(true, true);
+					}
+					if (infocount == 1) {
+						pan->getChild(0)->setEnabled(false, true);
+						pan->getChild(1)->setEnabled(true, true);
+					}
+					if (infocount == 2) {
+						pan->getChild(1)->setEnabled(false, true);
+						pan->getChild(2)->setEnabled(true, true);
+					}
+					if (infocount == 3) {
+						pan->getChild(2)->setEnabled(false, true);
+						pan->getChild(3)->setEnabled(true, true);
+					}
+					if (infocount == 4) {
+						tirpossiblef = true;
+						pan->getChild(3)->setEnabled(false, true);
+					}
+					if (infocount == 5) {
+
+						pan->getChild(4)->setEnabled(false, true);
+						pan->getChild(5)->setEnabled(true, true);
+					}
+					if (infocount == 6) {
+
+						pan->getChild(5)->setEnabled(false, true);
+						pan->getChild(6)->setEnabled(true, true);
+					}
+					if (infocount == 7) {
+						tirpossiblef = true;
+						pan->getChild(6)->setEnabled(false, true);
+					}
+				}
+			}
+			if (!testButtonTir) {
+				pinfocount = infocount;
+				if (tirpossiblef) {
+					tirpossible = true;
+					tirpossiblef = false;
+				}
 			}
 		}
 

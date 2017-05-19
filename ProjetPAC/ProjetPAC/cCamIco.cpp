@@ -3,7 +3,7 @@
 #include "widgets/CLabel.h"
 #include "widgets/CBitmap.h"
 
-chai3d::cCamIco::cCamIco(cFont* a_font, const std::string a_text, cBitmap* a_icon, cBitmap* a_icon2, const int a_id, const bool a_bool) : cPanel()
+chai3d::cCamIco::cCamIco(cFontPtr a_font, const std::string a_text, cBitmap* a_icon, cBitmap* a_icon2, const int a_id, const bool a_bool) : cPanel()
 
 {
 	// position of the gauge on screen
@@ -18,7 +18,7 @@ chai3d::cCamIco::cCamIco(cFont* a_font, const std::string a_text, cBitmap* a_ico
 	this->m_icon2 = a_icon2;
 
 	// add a description text as a child
-	cLabel* text = new cLabel(a_font->create());
+	cLabel* text = new cLabel(a_font);
 	text->m_fontColor.setWhite();
 	text->setText(a_text);
 	this->addChild(text);
