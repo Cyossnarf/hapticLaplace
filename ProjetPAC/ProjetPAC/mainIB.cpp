@@ -272,6 +272,7 @@ int mode_j = 1;
 bool shiftButtonPressed;
 bool plusButtonPressed;
 bool minusButtonPressed;
+bool anyPreviouslyPressed = false;
 bool pm = false;
 bool pp = false;
 bool np = false;
@@ -983,49 +984,41 @@ void keySelect(unsigned char key, int x, int y)
 	if (key == '0') { keyApply(0); }
 
 	// option +: increase the selected variable
-	if (key == '+')
-	{
-		//
-	}
+	if (key == '+') { keyApply(1); }
 
 	// option -: decrease the selected variable
-	if (key == '-')
-	{
-		//
-	}
+	if (key == '-') { keyApply(-1); }
 }
 
 //------------------------------------------------------------------------------
 
 void keyApply(int key)
 {
-	if (key == 2) {
-		if (!np) {
-			selection += 1;
-			if (selection > 4) {
-				selection = 0;
-			}
-			if (selection == 0) {
-				masseGauge->setColor(panelSelectedColor);
-				viewGauge->setColor(panelColor);
-			}
-			if (selection == 1) {
-				masseGauge->setColor(panelColor);
-				chargeGauge->setColor(panelSelectedColor);
-			}
-			if (selection == 2) {
-				intensiteGauge->setColor(panelSelectedColor);
-				chargeGauge->setColor(panelColor);
-			}
-			if (selection == 3) {
-				intensiteGauge->setColor(panelColor);
-				opacityGauge->setColor(panelSelectedColor);
-			}
-			if (selection == 4) {
-				viewGauge->setColor(panelSelectedColor);
-				opacityGauge->setColor(panelColor);
-			}
-			np = true;
+	if (key == 2)
+	{
+		selection += 1;
+		if (selection > 4) {
+			selection = 0;
+		}
+		if (selection == 0) {
+			masseGauge->setColor(panelSelectedColor);
+			viewGauge->setColor(panelColor);
+		}
+		if (selection == 1) {
+			masseGauge->setColor(panelColor);
+			chargeGauge->setColor(panelSelectedColor);
+		}
+		if (selection == 2) {
+			intensiteGauge->setColor(panelSelectedColor);
+			chargeGauge->setColor(panelColor);
+		}
+		if (selection == 3) {
+			intensiteGauge->setColor(panelColor);
+			opacityGauge->setColor(panelSelectedColor);
+		}
+		if (selection == 4) {
+			viewGauge->setColor(panelSelectedColor);
+			opacityGauge->setColor(panelColor);
 		}
 	}
 	else if (key == 0)
@@ -1040,7 +1033,6 @@ void keyApply(int key)
 		{
 			if (infocount == pinfocount) {
 				infocount += 1;
-				//cPanel* pan = (cPanel*)camera->m_frontLayer->getChild(4);
 				if (infocount > 7) {
 					infocount = -1;
 				}
@@ -1082,6 +1074,86 @@ void keyApply(int key)
 					pan32->getChild(6)->setEnabled(false, true);
 				}
 			}
+		}
+	}
+	else if (key == 1)
+	{
+		if (selection == 3) {
+			magnetField->setTransparency(magnetField->getTransparency() + 0.05);
+			opacityGauge->setValue(magnetField->getTransparency());
+		}
+		if (selection == 1) {
+			sphere->setCharge(sphere->getCharge() + 0.5);
+			if (sphere->getCharge() > 5) {
+				sphere->setCharge(5);
+			}
+			if (sphere->getCharge() == 0) {
+				sphere->setCharge(0.5);
+			}
+			chargeGauge->setValue(sphere->getCharge() / 5);
+		}
+		if (selection == 0) {
+			sphere->setMass(sphere->getMass() + 0.01);
+			if (sphere->getMass() > 0.35) {
+				sphere->setMass(0.35);
+			}
+			masseGauge->setValue(sphere->getMass() / 0.35);
+		}
+		if (selection == 2) {
+			magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() + 0.5);
+			if (magnetField->getCurrentIntensity() > 5) {
+				magnetField->setCurrentIntensity(5);
+			}
+			if (magnetField->getCurrentIntensity() == 0) {
+				magnetField->setCurrentIntensity(0.5);
+			}
+			intensiteGauge->setValue(magnetField->getCurrentIntensity() / 5);
+		}
+		if (selection == 4) {
+			if (!camera->isInMovement()) {
+				camera->setInMovement();
+				viewGauge->setValue(!viewGauge->getValue());
+			}
+		}
+	}
+	else
+	{
+		if (selection == 4) {
+			if (!camera->isInMovement()) {
+				camera->setInMovement();
+				viewGauge->setValue(!viewGauge->getValue());
+			}
+		}
+		if (selection == 3) {
+			magnetField->setTransparency(magnetField->getTransparency() - 0.05);
+			opacityGauge->setValue(magnetField->getTransparency());
+		}
+		if (selection == 1) {
+			sphere->setCharge(sphere->getCharge() - 0.5);
+			if (sphere->getCharge() == 0) {
+				sphere->setCharge(-0.5);
+			}
+			if (sphere->getCharge() < -5) {
+				sphere->setCharge(-5);
+			}
+			chargeGauge->setValue(sphere->getCharge() / 5);
+		}
+		if (selection == 0) {
+			sphere->setMass(sphere->getMass() - 0.01);
+			if (sphere->getMass() <= 0) {
+				sphere->setMass(0.01);
+			}
+			masseGauge->setValue(sphere->getMass() / 0.35);
+		}
+		if (selection == 2) {
+			magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() - 0.5);
+			if (magnetField->getCurrentIntensity() < -5) {
+				magnetField->setCurrentIntensity(-5);
+			}
+			if (magnetField->getCurrentIntensity() == 0) {
+				magnetField->setCurrentIntensity(-0.5);
+			}
+			intensiteGauge->setValue(magnetField->getCurrentIntensity() / 5);
 		}
 	}
 }
@@ -1510,108 +1582,14 @@ void updateHaptics(void)
 		hapticDevice->getUserSwitch(3, plusButtonPressed);
 		hapticDevice->getUserSwitch(2, shiftButtonPressed);
 
-		if (shiftButtonPressed) {
-			keyApply(2);
+		if (!anyPreviouslyPressed)
+		{
+			if (shiftButtonPressed) { keyApply(2); }
+			if (plusButtonPressed) { keyApply(1); }
+			if (plusButtonPressed) { keyApply(-1); }
 		}
-		else {
-			if (np) {
-				np = false;
-			}
-		}
-		if (plusButtonPressed) {
-			if (!pp) {
-				if (selection == 3) {
-					magnetField->setTransparency(magnetField->getTransparency() + 0.05);
-					opacityGauge->setValue(magnetField->getTransparency());
-				}
-				if (selection == 1) {
-					sphere->setCharge(sphere->getCharge() + 0.5);
-					if (sphere->getCharge() > 5) {
-						sphere->setCharge(5);
-					}
-					if (sphere->getCharge() == 0) {
-						sphere->setCharge(0.5);
-					}
-					chargeGauge->setValue(sphere->getCharge() / 5);
-				}
-				if (selection == 0) {
-					sphere->setMass(sphere->getMass() + 0.01);
-					if (sphere->getMass() > 0.35) {
-						sphere->setMass(0.35);
-					}
-					masseGauge->setValue(sphere->getMass() / 0.35);
-				}
-				if (selection == 2) {
-					magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() + 0.5);
-					if (magnetField->getCurrentIntensity() > 5) {
-						magnetField->setCurrentIntensity(5);
-					}
-					if (magnetField->getCurrentIntensity() == 0) {
-						magnetField->setCurrentIntensity(0.5);
-					}
-					intensiteGauge->setValue(magnetField->getCurrentIntensity() / 5);
-				}
-				if (selection == 4) {
-					if (!camera->isInMovement()) {
-						camera->setInMovement();
-						viewGauge->setValue(!viewGauge->getValue());
-					}
-				}
-				pp = true;
-			}
-		}
-		else {
-			if (pp) {
-				pp = false;
-			}
-		}
-		if (minusButtonPressed) {
-			if (!pm) {
-				if (selection == 4) {
-					if (!camera->isInMovement()) {
-						camera->setInMovement();
-						viewGauge->setValue(!viewGauge->getValue());
-					}
-				}
-				if (selection == 3) {
-					magnetField->setTransparency(magnetField->getTransparency() - 0.05);
-					opacityGauge->setValue(magnetField->getTransparency());
-				}
-				if (selection == 1) {
-					sphere->setCharge(sphere->getCharge() - 0.5);
-					if (sphere->getCharge() == 0) {
-						sphere->setCharge(-0.5);
-					}
-					if (sphere->getCharge() < -5) {
-						sphere->setCharge(-5);
-					}
-					chargeGauge->setValue(sphere->getCharge() / 5);
-				}
-				if (selection == 0) {
-					sphere->setMass(sphere->getMass() - 0.01);
-					if (sphere->getMass() <= 0) {
-						sphere->setMass(0.01);
-					}
-					masseGauge->setValue(sphere->getMass() / 0.35);
-				}
-				if (selection == 2) {
-					magnetField->setCurrentIntensity(magnetField->getCurrentIntensity() - 0.5);
-					if (magnetField->getCurrentIntensity() < -5) {
-						magnetField->setCurrentIntensity(-5);
-					}
-					if (magnetField->getCurrentIntensity() == 0) {
-						magnetField->setCurrentIntensity(-0.5);
-					}
-					intensiteGauge->setValue(magnetField->getCurrentIntensity() / 5);
-				}
-				pm = true;
-			}
-		}
-		else {
-			if (pm) {
-				pm = false;
-			}
-		}
+
+		anyPreviouslyPressed = minusButtonPressed || plusButtonPressed || shiftButtonPressed;
 
 		// read device position
 		hapticDevice->getPosition(devicePos);
