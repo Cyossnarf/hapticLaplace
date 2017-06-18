@@ -93,13 +93,16 @@ bool fullscreen = true;
 bool showTopView = true;
 
 // count the number of position reset
-int resetCount = 0;
+//int resetCount = 0;
 
 //int loop = 0;
 int counterForceFactor = 0;
 
 // variable selected for modification
 int selection = 0;
+
+// mouse input mode
+bool mouseMode = false;
 
 
 //------------------------------------------------------------------------------
@@ -173,16 +176,15 @@ cArrow *forceVector;
 
 // a bar to display info
 TwBar *bar1;
-
 // a label to explain what is happening//jp
 cLabel* labelMessage;
-
 // a label to display game over
 cLabel* go;
 bool gogo = false;
-
 // a label to display the values of the variables of the simulation
 cLabel* labelInfo;
+// a label to display the score
+cLabel* labelScore;
 
 // panels for the GUI
 cPanel* pan1;
@@ -228,8 +230,6 @@ string barDef;
 // indicates if the field/speed/force triaedra is displayed
 bool triaedraDisplay = true;
 
-bool BVDisplay = true;
-
 // root resource path
 string resourceRoot;
 
@@ -254,7 +254,7 @@ int nbTraj = 0;
 
 //
 cVector3d devicePos;
-cVector3d position;
+cVector3d spherePos;
 cVector3d posref;
 
 // score
@@ -271,6 +271,7 @@ int mode_j = 1;
 bool shiftButtonPressed;
 bool plusButtonPressed;
 bool minusButtonPressed;
+bool launchButtonPressed;
 bool anyPreviouslyPressed = false;
 
 //affichage infos hors jeu
@@ -314,10 +315,6 @@ void mouseClickCallback(int button, int state, int x, int y);
 
 // callback when a key is pressed
 void keySelect(unsigned char key, int x, int y);
-
-// function that applies commands according to the key
-// (used for 4 keys only)
-void keyApply(int key);
 
 // callback to render graphic scene
 void updateGraphics(void);
@@ -535,38 +532,34 @@ int main(int argc, char* argv[])
 
 
 	//--------------------------------------------------------------------------
-	// CREATE SPHERE AND FIELD (AND ARROWS)
+	// CREATE SPHERE, FIELD, TRAJECTORY AND ARROWS
 	//--------------------------------------------------------------------------
 
 	// create the sphere
 	sphere = new cMagnetSphere(SPHERE_RADIUS, SPHERE_MASS, SPHERE_CHARGE, SPHERE_DAMPING);
-
 	// add the sphere to the world
 	world->addChild(sphere);
-
 	// set position of the sphere
-	if (mode_j == 1) {
-		sphere->setLocalPos(0.00, -0.23, 0.0);
+	sphere->setLocalPos(0.00, -0.23, 0.0);
+	// set color of the sphere
+	sphere->m_material->setBlueDark();
+
+	// create the dots of the sphere's trajectory
+	cShapeSphere* miniSphere;
+	for (int i = 0; i < sphere->getCourseSize(); i++) {
+		miniSphere = new cShapeSphere(sphere->getRadius() * 0.2);
+		world->addChild(miniSphere);
+		sphere->addToCourse(miniSphere);
 	}
-	if (mode_j == 2) {
-		sphere->setLocalPos(0.02, 0.0, 0.0);
-	}
+
 	posref = sphere->getLocalPos();
 
 	//pose la cible
 	cible = new cShapeSphere(SPHERE_RADIUS * 2);
-	if (mode_j == 1) {
-		cible->setLocalPos(0.00, 0.23, 0.0);
-	}
-	if (mode_j == 2) {
-		cible->setLocalPos(-0.4, 0.0, 0.0);
-	}
+	cible->setLocalPos(0.00, 0.23, 0.0);
 	cible->m_material->setRed();
 	world->addChild(cible);
 
-	// set color of the sphere
-	sphere->m_material->setBlueDark();
-	
 	// create a magnetic field
 	magnetField = new cMagnetField();
 
@@ -638,11 +631,11 @@ int main(int argc, char* argv[])
 	pan3->addChild(pan4);
 
 	// create fonts
-	//cFont *font = new cFont();
-	//fileload = font->loadFromFile(RESOURCE_PATH("../resources/earthorbiter20b.fnt"));
+	cFontPtr font_pt = cFontPtr(new cFont());
+	fileload = font_pt->loadFromFile(RESOURCE_PATH("../resources/futura20.fnt"));
 	cFontPtr titleFont_pt = cFontPtr(new cFont());
 	fileload = titleFont_pt->loadFromFile(RESOURCE_PATH("../resources/earthorbiter72b.fnt"));
-	cFontPtr font = NEW_CFONTCALIBRI20();
+	//cFontPtr font = NEW_CFONTCALIBRI20();
 	if (!fileload)
 	{
 		cout << "Error - Font failed to load correctly." << endl;
@@ -656,17 +649,23 @@ int main(int argc, char* argv[])
 	// set font color
 	labelMessage->m_fontColor.setWhite();
 	// set text message
-	labelMessage->setText("MAGNETICA");
+	labelMessage->setText("MAGNETICA STRIKE");
 	//labelMessage->s
 
 	// create a label to display variable values of the simulation
-	labelInfo = new cLabel(font);
+	labelInfo = new cLabel(font_pt);
 	labelInfo->m_fontColor.setRed();
 	camera->m_frontLayer->addChild(labelInfo);
 	labelInfo->setEnabled(false);
 
+	// create a label to display the current score
+	labelScore = new cLabel(font_pt);
+	labelScore->m_fontColor.setRed();
+	pan4->addChild(labelScore);
+	labelScore->setLocalPos(15, 15);
+
 	//create a label to display game over
-	go = new cLabel(font);
+	go = new cLabel(font_pt);
 	go->m_fontColor.setWhite();
 	camera->m_frontLayer->addChild(go);
 
@@ -676,7 +675,7 @@ int main(int argc, char* argv[])
 	cBitmap* icon2 = new cBitmap();
 	fileload = fileload && loadImage(icon2, "plume.png");
 	if (!fileload) { return (-1); }
-	masseGauge = new cGauge(font, "Masse de la particule", icon1, icon2, 0.01, 0.35, 0.01, 0);
+	masseGauge = new cGauge(font_pt, "Masse de la particule", icon1, icon2, 0.01, 0.35, 0.01, 0);
 	masseGauge->setColor(panelSelectedColor);
 	masseGauge->setValue(sphere->getMass());
 	pan2->addChild(masseGauge);
@@ -686,7 +685,7 @@ int main(int argc, char* argv[])
 	icon2 = new cBitmap();
 	fileload = fileload && loadImage(icon2, "moins.png");
 	if (!fileload) { return (-1); }
-	chargeGauge = new cGauge(font, "Charge de la particule", icon1, icon2, 0.0, 5.0, 0.5, 1, true);
+	chargeGauge = new cGauge(font_pt, "Charge de la particule", icon1, icon2, 0.0, 5.0, 0.5, 1, true);
 	chargeGauge->setColor(panelColor);
 	chargeGauge->setValue(sphere->getCharge());
 	pan2->addChild(chargeGauge);
@@ -696,7 +695,7 @@ int main(int argc, char* argv[])
 	icon2 = new cBitmap();
 	fileload = fileload && loadImage(icon2, "aimantpetit.png");
 	if (!fileload) { return (-1); }
-	intensiteGauge = new cGauge(font, "Intensite du champ magnetique", icon1, icon2, 0.5, 5.0, 0.5, 2);
+	intensiteGauge = new cGauge(font_pt, "Intensite du champ magnetique", icon1, icon2, 0.5, 5.0, 0.5, 2);
 	intensiteGauge->setColor(panelColor);
 	intensiteGauge->setValue(magnetField->getCurrentIntensity());
 	pan2->addChild(intensiteGauge);
@@ -706,7 +705,7 @@ int main(int argc, char* argv[])
 	icon2 = new cBitmap();
 	fileload = fileload && loadImage(icon2, "transparent.png");
 	if (!fileload) { return (-1); }
-	opacityGauge = new cGauge(font, "Opacite du champ magnetique", icon1, icon2, 0.0, 1.0, 0.05, 3);
+	opacityGauge = new cGauge(font_pt, "Opacite du champ magnetique", icon1, icon2, 0.0, 1.0, 0.05, 3);
 	opacityGauge->setColor(panelColor);
 	opacityGauge->setValue(magnetField->getTransparency());
 	pan2->addChild(opacityGauge);
@@ -716,7 +715,7 @@ int main(int argc, char* argv[])
 	icon2 = new cBitmap();
 	fileload = fileload && loadImage(icon2, "cube1.png");
 	if (!fileload) { return (-1); }
-	viewGauge = new cGauge(font, "Point de vue de la camera", icon1, icon2, -2.0, 2.0, 0.0, 4, false, true);
+	viewGauge = new cGauge(font_pt, "Point de vue de la camera", icon1, icon2, -2.0, 2.0, 0.0, 4, false, true);
 	viewGauge->setColor(panelColor);
 	viewGauge->setValue(1.0);
 	pan2->addChild(viewGauge);
@@ -857,16 +856,6 @@ void resizeWindow(int w, int h)
 //------------------------------------------------------------------------------
 
 void reset() {
-	world->clearAllChildren();
-	world->addChild(camera);
-	world->addChild(light);
-	world->addChild(light2);
-	world->addChild(sphere);
-	world->addChild(cible);
-	world->addChild(bigMagnetFieldVector);
-	world->addChild(magnetFieldVector);
-	world->addChild(speedVector);
-	world->addChild(forceVector);
 	sphere->setAcceleration(0.0, 0.0, 0.0);
 	sphere->setSpeed(0.0, 0.0, 0.0);
 	if (mode_j == 1) {
@@ -877,7 +866,8 @@ void reset() {
 		sphere->setLocalPos(0.02, 0.0, 0.0);
 		posref = cVector3d(0.02, 0.0, 0.0);
 	}
-	world->addChild(magnetField);
+	sphere->resetCourse();
+
 	nbTraj = 0;
 	if (nbvisees == 20 && !gogo) {//fin de la partie
 		gogo = true;
@@ -885,14 +875,12 @@ void reset() {
 		if (mode_j == 1) {
 			cible->setLocalPos(0.00, 0.23, 0.0);
 			tirpossible = false;
-			cPanel* pan = (cPanel*)camera->m_frontLayer->getChild(4);
-			pan->getChild(7)->setEnabled(true, true);
+			pan32->getChild(7)->setEnabled(true, true);
 		}
 		if (mode_j == 2) {
 			cible->setLocalPos(-0.4, 0.0, 0.0);
 			tirpossible = false;
-			cPanel* pan = (cPanel*)camera->m_frontLayer->getChild(4);
-			pan->getChild(4)->setEnabled(true, true);
+			pan32->getChild(4)->setEnabled(true, true);
 		}
 		sphere->setMass(0.04);
 		sphere->setCharge(0.5);
@@ -940,23 +928,16 @@ void keySelect(unsigned char key, int x, int y)
 	}
 
 	// option b: toggle bigMagnetFieldVector display
-	if (key == 'b')
-	{
-		BVDisplay = !BVDisplay;
-		bigMagnetFieldVector->setEnabled(BVDisplay, true);
-	}
+	if (key == 'b') { bigMagnetFieldVector->setEnabled(!bigMagnetFieldVector->getEnabled(), true); }
 
 	// option e: toggle labelInfo display
-	if (key == 'e')
-	{
-		labelInfo->setEnabled(!labelInfo->getEnabled());
-	}
+	if (key == 'e') { labelInfo->setEnabled(!labelInfo->getEnabled()); }
+
+	// option m: toggle mouse input mode
+	if (key == 'm') { mouseMode = !mouseMode; }
 
 	// option r: reset position of the sphere
-	if (key == 'r')
-	{
-		reset();
-	}
+	if (key == 'r') { reset(); }
 
 	// option s: reset all (including score, charge, mass and field)
 	if (key == 's')
@@ -979,23 +960,7 @@ void keySelect(unsigned char key, int x, int y)
 	if (key == 'c') { camera->setInMovement(); }
 
 	// option 2: shift selection to the next parameter
-	if (key == '2') { keyApply(2); }
-
-	// option 0: accept/launch
-	if (key == '0') { keyApply(0); }
-
-	// option +: increase the selected variable
-	if (key == '+') { keyApply(1); }
-
-	// option -: decrease the selected variable
-	if (key == '-') { keyApply(-1); }
-}
-
-//------------------------------------------------------------------------------
-
-void keyApply(int key)
-{
-	if (key == 2)
+	if (key == '2')
 	{
 		((cGauge*)pan2->getChild(selection))->setColor(panelColor);
 
@@ -1004,12 +969,16 @@ void keyApply(int key)
 
 		((cGauge*)pan2->getChild(selection))->setColor(panelSelectedColor);
 	}
-	else if (key == 0)
+
+	// option 0: accept/launch
+	if (key == '0')
 	{
 		if (tirpossible)
 		{
-			cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());
-			sphere->setSpeed(newVel);
+			//cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());//grospb
+			//sphere->setSpeed(newVel);
+			sphere->setSpeed(userVel * 8);
+			nbvisees += 1;
 		}
 		else
 		{
@@ -1058,7 +1027,9 @@ void keyApply(int key)
 			}
 		}
 	}
-	else
+
+	// option +/-: increase/decrease the selected variable
+	if (key == '+' || key == '-')
 	{
 		//printf("Salut,");//debug
 		if (selection == 4) {
@@ -1066,7 +1037,7 @@ void keyApply(int key)
 			viewGauge->setValue(camera->getState());
 		}
 		else {
-			if (key > 0) { ((cGauge*)pan2->getChild(selection))->incr(); }
+			if (key == '+') { ((cGauge*)pan2->getChild(selection))->incr(); }
 			else { ((cGauge*)pan2->getChild(selection))->decr(); }
 
 			sphere->setMass(masseGauge->getValue());
@@ -1103,7 +1074,7 @@ bool rayonex = false;
 
 void graphicsTimer(int data)
 {
-	cShapeSphere *a;
+	//cShapeSphere *a;
 	if (simulationRunning)
 	{
 		glutPostRedisplay();
@@ -1252,34 +1223,6 @@ void graphicsTimer(int data)
 			reset();
 		}
 	}
-	if (nbTraj == 0)
-	{
-		while (!traj.empty())
-		{
-			traj.pop();
-		}
-	}
-	if ((nbTraj < 50) && !(sphere->getSpeed().equals(testSpeed)))
-	{
-		a = new cShapeSphere(SPHERE_RADIUS / 10);
-		a->setLocalPos(sphere->getLocalPos());
-		world->addChild(a);
-		traj.push(a);
-		nbTraj += 1;
-		if (nbTraj == 3) {
-			nbvisees += 1;
-		}
-	}
-	if ((nbTraj == 50) && !(sphere->getSpeed().equals(testSpeed)))
-	{
-		a = traj.front();
-		traj.pop();
-		world->deleteChild(a);
-		a = new cShapeSphere(SPHERE_RADIUS / 10);
-		a->setLocalPos(sphere->getLocalPos());
-		world->addChild(a);
-		traj.push(a);
-	}
 }
 
 //------------------------------------------------------------------------------
@@ -1329,26 +1272,31 @@ void updateGraphics(void)
 	SPHERE_FORCE[0] = (float)(sphere_force.y());
 	SPHERE_FORCE[1] = (float)(sphere_force.z());
 
+	// update for the sphere's course
+	sphere->updateCourse();
+
 	/////////////////////////////////////////////////////////////////////
 	// UPDATE WIDGETS
 	/////////////////////////////////////////////////////////////////////
 
 	// update variable values
-	labelInfo->setText("field opacity : " + cStr(magnetField->getTransparency() * 100) 
+	labelInfo->setText(cStr(nbvisees)+" | field opacity : " + cStr(magnetField->getTransparency() * 100)
 		+ "% | sphere mass : " + cStr(sphere->getMass()) 
 		+ " kg | sphere charge : " + cStr(sphere->getCharge()) 
 		+ " C | current intensity : " + cStr(magnetField->getCurrentIntensity()) + " A");
 	//cStr(nbtouches)
 	//cStr(sphere_force.length())//cStr(atan2(-devicePos.x(), devicePos.y()))
+	//devicePos.str()+" "+userVel.str()
 	
+	// update score
+	labelScore->setText(cStr(nbtouches));
+
 	// update position of info label
-	labelInfo->setLocalPos(15, windowH - 20);
-
+	labelInfo->setLocalPos(15, windowH - 25);
 	// update position of message label
-	labelMessage->setLocalPos(0.2 * windowW, 0.825 * windowH - 36);
-
+	labelMessage->setLocalPos(0.5 * (0.75 * windowW - labelMessage->getWidth()), 0.925 * windowH - 40);
 	//update position of game over label
-	go->setLocalPos((int)(0.5*(windowW - go->getWidth())), 30);
+	go->setLocalPos((int)(0.5 * (windowW - go->getWidth())), 30);
 	if (gogo) {
 		go->setText(gost());
 	}
@@ -1377,16 +1325,16 @@ void updateGraphics(void)
 
 	// assign a position (x,y) to panels
 	pan1->setLocalPos(windowW * 0.05, windowH * 0.05);
-	pan2->setLocalPos(windowW * 0.775, 0);
-	pan3->setLocalPos(windowW * 0.35, 0.0);
+	pan2->setLocalPos(windowW * 0.775, 0.0);
+	pan3->setLocalPos(windowW * 0.35, windowH * 0.0);
 	pan4->setLocalPos(windowH * 0.017, windowH * 0.017);
 
 	// update positions and dimensions of gauges
-	masseGauge->update(windowW * 0.2, windowH, windowH * 0.4, 5);
-	chargeGauge->update(windowW * 0.2, windowH, windowH * 0.4, 5);
-	intensiteGauge->update(windowW * 0.2, windowH, windowH * 0.4, 5);
-	opacityGauge->update(windowW * 0.2, windowH, windowH * 0.4, 5);
-	viewGauge->update(windowW * 0.2, windowH, windowH * 0.4, 5);
+	masseGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
+	chargeGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
+	intensiteGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
+	opacityGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
+	viewGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
 	
 	/////////////////////////////////////////////////////////////////////
 	// RENDER SCENE
@@ -1408,9 +1356,9 @@ void updateGraphics(void)
 
 	// display bars
 	barPosX = (int)(windowW*0.775);
-	barPosY = (int)(windowH*0.6);
+	barPosY = (int)(windowH*0.65);
 	barSizeW = (int)(windowW*0.2);
-	barSizeH = (int)(windowH*0.4);
+	barSizeH = (int)(windowH*0.35);
 	barPos = to_string(barPosX)+" "+ to_string(barPosY);
 	barSize = to_string(barSizeW) + " " + to_string(barSizeH);
 	barDef = " Bonjour position='" + barPos + "' size='" + barSize+"'";
@@ -1462,9 +1410,6 @@ void updateHaptics(void)
 	// store the force to apply to the device
 	cVector3d forceToApply(0.0, 0.0, 0.0);
 
-	// store desired data to write into a text file
-	//vector<double> data;
-
 	// gain used to control the position of the haptic device
 	int gain = 1;
 
@@ -1503,21 +1448,37 @@ void updateHaptics(void)
 		hapticDevice->getUserSwitch(1, minusButtonPressed);
 		hapticDevice->getUserSwitch(3, plusButtonPressed);
 		hapticDevice->getUserSwitch(2, shiftButtonPressed);
+		hapticDevice->getUserSwitch(0, launchButtonPressed);
 
 		if (!anyPreviouslyPressed)
 		{
-			if (shiftButtonPressed) { keyApply(2); }
-			if (plusButtonPressed) { keyApply(1); }
-			if (plusButtonPressed) { keyApply(-1); }
+			if (shiftButtonPressed) { keySelect('2', 0, 0); }
+			if (plusButtonPressed) { keySelect('+', 0, 0); }
+			if (minusButtonPressed) { keySelect('-', 0, 0); }
+			if (launchButtonPressed && sphere->getLocalPos().equals(posref, 0.005)) {
+				keySelect('0', 0, 0);
+			}
+			else {
+				pinfocount = infocount;
+				if (tirpossiblef) {
+					tirpossible = true;
+					tirpossiblef = false;
+				}
+			}
 		}
 
-		anyPreviouslyPressed = minusButtonPressed || plusButtonPressed || shiftButtonPressed;
+		anyPreviouslyPressed = minusButtonPressed || plusButtonPressed || shiftButtonPressed || launchButtonPressed;
 
 		// read device position
-		hapticDevice->getPosition(devicePos);
+		if (mouseMode) {
+			devicePos = cVector3d(0.0, 0.0001 * (mousePosx - 0.5 * screenW), 0.0001 * (0.5 * screenH - mousePosy));
+		}
+		else {
+			hapticDevice->getPosition(devicePos);
+		}
 
 		// read sphere position
-		cVector3d position(sphere->getLocalPos());
+		spherePos = sphere->getLocalPos();
 
 		// get sphere velocity from user
 		//cVector3d userVel(userMovex, userMovey, userMovez);
@@ -1530,18 +1491,19 @@ void updateHaptics(void)
 		//userVel = userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
 
 		// get sphere velocity from user
-		userVel = cVector3d(devicePos.x()*0.001, devicePos.y()*0.001, devicePos.z()*0.001);//pb1
+		//userVel = cVector3d(devicePos.x()*0.001, devicePos.y()*0.001, devicePos.z()*0.001);//pb1//grospb
+		userVel = devicePos;
 		if (mode_j == 1) {
 			userVel = (userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection());
 		}
-
+		/*//grospb
 		// limit the velocity maximal that the user can give to the sphere
 		if (userVel.length() > 0.0008)
 		{
 			userVel.normalize();
 			userVel *= 0.0008;
 		}
-
+		*/
 
 		/////////////////////////////////////////////////////////////////////////
 		// UPDATE SIMULATION
@@ -1550,8 +1512,6 @@ void updateHaptics(void)
 		// clear forces for the sphere
 		cVector3d sphereFce;
 		sphereFce.zero();
-
-		//data.push_back(counterForceFactor);
 
 		if (magnetField->contain(*sphere))
 		{
@@ -1581,41 +1541,21 @@ void updateHaptics(void)
 			counterForceFactor = 0;
 		}
 		//mq
-		/*else
-		{
-		loop = 0;
-		}*/
 
 		sphere_force = sphereFce;//fusionner les 2 vars?
 
 		// compute acceleration
 		sphere->setAcceleration(sphereFce / sphere->getMass());//sphere->setAcceleration((sphereFce + userForce) / sphere->getMass());//mqq
 
-		// compute velocity
-		bool testButtonTir;
-		hapticDevice->getUserSwitch(0, testButtonTir);
+		// compute velocity (if the sphere has already been launched)
 		if (!sphere->getLocalPos().equals(posref, 0.005)) {
-
 			cVector3d newVel(sphere->getSpeed() + timeInterval * sphere->getAcceleration());
 			sphere->setSpeed(newVel);
 		}
-		else {
-			if (testButtonTir) {
-				keyApply(0);
-			}
-			else {
-				pinfocount = infocount;
-				if (tirpossiblef) {
-					tirpossible = true;
-					tirpossiblef = false;
-				}
-			}
-		}
-
 		sphere_speed = sphere->getSpeed();
 
 		// compute position
-		cVector3d spherePos = position + timeInterval * sphere->getSpeed() + cSqr(timeInterval) * sphere->getAcceleration();
+		spherePos = spherePos + timeInterval * sphere->getSpeed() + cSqr(timeInterval) * sphere->getAcceleration();
 
 		// update value to sphere object
 		sphere->setLocalPos(spherePos);
@@ -1656,9 +1596,6 @@ void updateHaptics(void)
 
 		
 	}
-
-	// register data to be print into a text file
-	//logData(data, 0.1, "data.txt");
 
 	// close  connection to haptic device
 	hapticDevice->close();

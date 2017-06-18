@@ -137,7 +137,7 @@ void chai3d::cGauge::update(const double a_frameWidth,
 	setSize(a_frameWidth, gaugeHeight);
 
 	// set position of the text child
-	txt->setLocalPos(15, gaugeHeight - 20);
+	txt->setLocalPos(15, gaugeHeight - 25);
 
 	if (!m_toggle)
 	{

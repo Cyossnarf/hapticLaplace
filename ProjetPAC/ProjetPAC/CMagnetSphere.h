@@ -2,6 +2,7 @@
 #define CMagnetSphereh
 
 #include "world/CShapeSphere.h"
+#include <vector>
 
 namespace chai3d {
 
@@ -10,34 +11,42 @@ namespace chai3d {
 
 	public:
 
-		cMagnetSphere(double radius, double mass = 9.11e-31, double charge = 1.602176565e-19, double damping = 0.999);
+		cMagnetSphere(double a_radius, double a_mass = 9.11e-31, double a_charge = 1.602176565e-19, double a_damping = 0.999, int a_courseSize = 50);
 
-		inline void setCharge(double value) { charge = value; }
-		inline double getCharge() const { return charge; }
+		inline void setCharge(double value) { m_charge = value; }
+		inline double getCharge() const { return m_charge; }
 
-		inline void setMass(double value) { mass = value; }
-		inline double getMass() const { return mass; }
+		inline void setMass(double value) { m_mass = value; }
+		inline double getMass() const { return m_mass; }
 
-		inline void setDamping(double value) { damping = value; }
-		inline double getDamping() const { return damping; }
+		inline void setDamping(double value) { m_damping = value; }
+		inline double getDamping() const { return m_damping; }
 
-		inline void setAcceleration(const cVector3d &acc) { acceleration = acc; }
+		inline void setAcceleration(const cVector3d &acc) { m_acceleration = acc; }
 		inline void setAcceleration(double x, double y, double z) { setAcceleration(cVector3d(x, y, z)); }
-		inline cVector3d getAcceleration() const { return acceleration; }
+		inline cVector3d getAcceleration() const { return m_acceleration; }
 
-		inline void setSpeed(const cVector3d &sp) { speed = sp; }
+		inline void setSpeed(const cVector3d &sp) { m_speed = sp; }
 		inline void setSpeed(double x, double y, double z) { setSpeed(cVector3d(x, y, z)); }
-		inline cVector3d getSpeed() const { return speed; }
-		double* getSpeed3();
+		inline cVector3d getSpeed() const { return m_speed; }
+		
+		inline int getCourseSize() const { return m_courseSize; }
+		inline void addToCourse(cShapeSphere* miniSphere) { m_course.push_back(miniSphere); }
+		void updateCourse();
+		void resetCourse();
 
 	private:
 
-		double mass;
-		double charge;
-		double damping;
+		double m_mass;
+		double m_charge;
+		double m_damping;
 
-		cVector3d acceleration;
-		cVector3d speed;
+		cVector3d m_acceleration;
+		cVector3d m_speed;
+
+		std::vector<cShapeSphere*> m_course;
+		int m_courseFront;
+		int m_courseSize;
 
 	};
 
