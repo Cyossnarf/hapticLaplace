@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CArrow.cpp" />
+    <ClCompile Include="CConsol.cpp" />
     <ClCompile Include="CGauge.cpp" />
     <ClCompile Include="CMobileCam.cpp" />
     <ClCompile Include="CMagnetField.cpp" />
@@ -28,6 +29,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CArrow.h" />
+    <ClInclude Include="CConsol.h" />
     <ClInclude Include="CGauge.h" />
     <ClInclude Include="CMobileCam.h" />
     <ClInclude Include="CMagnetField.h" />
