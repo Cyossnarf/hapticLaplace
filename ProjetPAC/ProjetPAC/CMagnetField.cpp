@@ -59,7 +59,6 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 	setHapticEnabled(false);
 
 	// configure the appearance
-	m_material->setBlueLightSky();
 	setTransparency(1);
 
 	// set the orientation of the field

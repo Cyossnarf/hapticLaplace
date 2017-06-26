@@ -3,7 +3,7 @@
 
 chai3d::cConsol::cConsol(double a_width,
 	double a_height,
-	const cColorf &a_colBg,
+	const cColorf &a_txtCol,
 	cFontPtr a_fontLbl,
 	cFontPtr a_fontVal,
 	const std::string a_textLbl,
@@ -18,12 +18,14 @@ chai3d::cConsol::cConsol(double a_width,
 
 	// add a description text as a child
 	cLabel* textLbl = new cLabel(a_fontLbl);
+	//textLbl->setColor(a_txtCol);
 	textLbl->m_fontColor.setRed();
 	textLbl->setText(a_textLbl);
 	this->addChild(textLbl);
 
 	// add a value text as a child
 	cLabel* textVal = new cLabel(a_fontVal);
+	//textVal->setColor(a_txtCol);
 	textVal->m_fontColor.setRed();
 	this->addChild(textVal);
 

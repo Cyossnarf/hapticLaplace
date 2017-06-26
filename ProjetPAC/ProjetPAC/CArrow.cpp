@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cmath>
 
-chai3d::cArrow::cArrow(const cVector3d &pos, cColorb &col, double shaft_radius, double tip_radius, double len, double tip_rel_len, int dots) : cMesh()
+chai3d::cArrow::cArrow(const cVector3d &pos, cColorf &col, double shaft_radius, double tip_radius, double len, double tip_rel_len, int dots) : cMesh()
 
 {
 	this->tip_len = len * tip_rel_len;

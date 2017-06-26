@@ -135,10 +135,16 @@ const int LAUNCH_NUMBER = 15;
 // colors
 const cColorf backgroundColor = cColorf(52 / 255.f, 48 / 255.f, 71 / 255.f);
 const cColorf panelColor = cColorf(125 / 255.f, 117 / 255.f, 164 / 255.f);
+const cColorf selectedPanelColor = cColorf(175 / 255.f, 117 / 255.f, 164 / 255.f);
 const cColorf blackColor = cColorf(8 / 255.f, 9 / 255.f, 16 / 255.f);
-const cColorf panelSelectedColor = cColorf(175 / 255.f, 117 / 255.f, 164 / 255.f);
-const cColorf lvlColor = cColorf(255.f, 255.f, 255.f);
-const cColorf lvlSelectedColor = cColorf(255.f, 255.f, 255.f);
+cColorf magneticFieldColor = cColorf(129 / 255.f, 143 / 255.f, 255 / 255.f);
+//cColorf sphereColor = cColorf(254 / 255.f, 216 / 255.f, 37 / 255.f);
+cColorf targetColor = cColorf(204 / 255.f, 49 / 255.f, 174 / 255.f);
+cColorf fieldArrowColor = cColorf(52 / 255.f, 74 / 255.f, 255 / 255.f);
+cColorf speedArrowColor = cColorf(133 / 255.f, 245 / 255.f, 0 / 255.f);
+cColorf forceArrowColor = cColorf(243 / 255.f, 0 / 255.f, 86 / 255.f);
+const cColorf dataColor = cColorf(242 / 255.f, 100 / 255.f, 190 / 255.f);// marche pas encore...
+cColorf levelColor = cColorf(200 / 255.f, 200 / 255.f, 240 / 255.f);
 
 
 //------------------------------------------------------------------------------
@@ -424,7 +430,7 @@ int main(int argc, char* argv[])
 	glutDisplayFunc(updateGraphics);
 	glutKeyboardFunc(keySelect);
 	glutReshapeFunc(resizeWindow);
-	glutSetWindowTitle("Mouvement d'une charge dans un champ magnétique");
+	glutSetWindowTitle("MAGNETICA STRIKE");
 
 	// set fullscreen mode
 	if (fullscreen)
@@ -531,7 +537,7 @@ int main(int argc, char* argv[])
 	// set position of the sphere
 	sphere->setLocalPos(SPHERE_POS1);
 	// set color of the sphere
-	sphere->m_material->setBlueDark();
+	sphere->m_material->setRed();//setColor(sphereColor);
 
 	// create the dots of the sphere's trajectory
 	cShapeSphere* miniSphere;
@@ -547,26 +553,26 @@ int main(int argc, char* argv[])
 	// create the target
 	cible = new cShapeSphere(TARGET_RADIUS);
 	cible->setLocalPos(0.00, 0.23, 0.0);
-	cible->m_material->setRed();
+	cible->m_material->setColor(targetColor);
 	world->addChild(cible);
 
 	// create a magnetic field
 	magnetField = new cMagnetField();
-
 	// add the magnetic field to the world
 	world->addChild(magnetField);
-
 	// set position of the magnetic field
-	magnetField->setLocalPos(-magnetField->getLength(), 0.0, 0.0);//(0.0, 0.05, 0.01);
+	magnetField->setLocalPos(-magnetField->getLength(), 0.0, 0.0);
+	// set color of the magnetic field
+	magnetField->m_material->setColor(magneticFieldColor);
 
 	// create arrows
-	bigMagnetFieldVector = new cArrow(cVector3d(-0.35, 0.0, 0.0), cColorb(0, 0, 255), 0.01, 0.02, 0.3);
-	magnetFieldVector = new cArrow(SPHERE_POS1, cColorb(0, 0, 255), 0.002, 0.004, 0.03);
-	speedVector = new cArrow(SPHERE_POS1, cColorb(0, 255, 0), 0.002, 0.004, 0.03);
-	forceVector = new cArrow(SPHERE_POS1, cColorb(255, 0, 0), 0.002, 0.004, 0.03);
-	aimVector = new cArrow(SPHERE_POS1, cColorb(0, 255, 0), 0.002, 0.004, 0.03, 0.25, 5);
-	aimXVector = new cArrow(SPHERE_POS1, cColorb(255, 255, 255), 0.002, 0.004, 0.03, 0.25, 5);
-	aimYZVector = new cArrow(SPHERE_POS1, cColorb(255, 255, 255), 0.002, 0.004, 0.03, 0.25, 5);
+	bigMagnetFieldVector = new cArrow(cVector3d(-0.35, 0.0, 0.0), fieldArrowColor, 0.01, 0.02, 0.3);
+	magnetFieldVector = new cArrow(SPHERE_POS1, fieldArrowColor, 0.002, 0.004, 0.03);
+	speedVector = new cArrow(SPHERE_POS1, speedArrowColor, 0.002, 0.004, 0.03);
+	forceVector = new cArrow(SPHERE_POS1, forceArrowColor, 0.002, 0.004, 0.03);
+	aimVector = new cArrow(SPHERE_POS1, speedArrowColor, 0.002, 0.004, 0.03, 0.25, 5);
+	aimXVector = new cArrow(SPHERE_POS1, cColorf(255, 255, 255), 0.002, 0.004, 0.03, 0.25, 5);
+	aimYZVector = new cArrow(SPHERE_POS1, cColorf(255, 255, 255), 0.002, 0.004, 0.03, 0.25, 5);
 
 	// add the arrows to the world
 	world->addChild(bigMagnetFieldVector);
@@ -587,13 +593,13 @@ int main(int argc, char* argv[])
 	bar1 = TwNewBar("Bonjour");
 
 	// define parameters of the bar
-	TwDefine(" Bonjour refresh=0.1 ");
+	TwDefine(" Bonjour refresh=0.1 label='Représentation des vecteurs' color='125 117 164' alpha=128 fontsize=3 ");
 
 	// add variables
 	//TwAddVarRW(bar1, "Charge", TW_TYPE_DOUBLE, &SPHERE_CHARGE, "");
-	TwAddVarRW(bar1, "Champ magnétique", TW_TYPE_DIR3F, &MAGN_FIELD, " opened=true showval=false arrowcolor='0 0 255' ");
-	TwAddVarRW(bar1, "Vitesse", TW_TYPE_DIR3F, &SPHERE_SPEED, " opened=true showval=false arrowcolor='0 255 0' ");
-	TwAddVarRW(bar1, "Force magnétique", TW_TYPE_DIR3F, &SPHERE_FORCE, " opened=true showval=false arrowcolor='255 0 0' ");
+	TwAddVarRW(bar1, "Champ magnétique", TW_TYPE_DIR3F, &MAGN_FIELD, " opened=true showval=false arrowcolor='52 74 255' ");
+	TwAddVarRW(bar1, "Vitesse", TW_TYPE_DIR3F, &SPHERE_SPEED, " opened=true showval=false arrowcolor='133 245 0' ");
+	TwAddVarRW(bar1, "Force magnétique", TW_TYPE_DIR3F, &SPHERE_FORCE, " opened=true showval=false arrowcolor='243 0 86' ");
 
 	//--------------------------------------------------------------------------
 	// WIDGETS
@@ -657,25 +663,25 @@ int main(int argc, char* argv[])
 	labelInfo->setEnabled(false);
 
 	// create consols to display info about the game
-	levelCon = new cConsol(100.0, 60.0, blackColor, font_pt, scoreFont_pt, "LEVEL");
+	levelCon = new cConsol(100.0, 60.0, dataColor, font_pt, scoreFont_pt, "LEVEL");
 	levelCon->setColor(blackColor);
 	levelCon->setCornerRadius(5, 0, 5, 0);
 	pan3->addChild(levelCon);
 	levelCon->setLocalPos(10.0, 10.0);
 
-	scoreCon = new cConsol(120.0, 60.0, blackColor, font_pt, scoreFont_pt, "SCORE", false);
+	scoreCon = new cConsol(120.0, 60.0, dataColor, font_pt, scoreFont_pt, "SCORE", false);
 	scoreCon->setColor(blackColor);
 	scoreCon->setCornerRadius(5, 0, 5, 0);
 	pan3->addChild(scoreCon);
 	scoreCon->setLocalPos(140.0, 10.0);
 
-	highscoreCon = new cConsol(120.0, 60.0, blackColor, font_pt, scoreFont_pt, "HIGHSCORE");
+	highscoreCon = new cConsol(120.0, 60.0, dataColor, font_pt, scoreFont_pt, "HIGHSCORE");
 	highscoreCon->setColor(blackColor);
 	highscoreCon->setCornerRadius(0, 5, 0, 5);
 	pan3->addChild(highscoreCon);
 	highscoreCon->setLocalPos(270.0, 10.0);
 
-	launchCon = new cConsol(100.0, 60.0, blackColor, font_pt, scoreFont_pt, "STRIKES");
+	launchCon = new cConsol(100.0, 60.0, dataColor, font_pt, scoreFont_pt, "STRIKES");
 	launchCon->setColor(blackColor);
 	launchCon->setCornerRadius(0, 5, 0, 5);
 	pan3->addChild(launchCon);
@@ -687,8 +693,8 @@ int main(int argc, char* argv[])
 	cBitmap* icon2 = new cBitmap();
 	fileload = fileload && loadImage(icon2, "plume.png");
 	if (!fileload) { return (-1); }
-	masseGauge = new cGauge(font_pt, "Masse de la particule", icon1, icon2, 0.01, 0.35, 0.01, 0);
-	masseGauge->setColor(panelSelectedColor);
+	masseGauge = new cGauge(font_pt, "Masse de la particule", icon1, icon2, levelColor, 0.01, 0.35, 0.01, 0);
+	masseGauge->setColor(selectedPanelColor);
 	masseGauge->setCornerRadius(5, 5, 5, 5);
 	masseGauge->setValue(sphere->getMass());
 	pan2->addChild(masseGauge);
@@ -698,7 +704,7 @@ int main(int argc, char* argv[])
 	icon2 = new cBitmap();
 	fileload = fileload && loadImage(icon2, "moins.png");
 	if (!fileload) { return (-1); }
-	chargeGauge = new cGauge(font_pt, "Charge de la particule", icon1, icon2, 0.0, 5.0, 0.5, 1, true);
+	chargeGauge = new cGauge(font_pt, "Charge de la particule", icon1, icon2, levelColor, 0.0, 5.0, 0.5, 1, true);
 	chargeGauge->setColor(panelColor);
 	chargeGauge->setCornerRadius(5, 5, 5, 5);
 	chargeGauge->setValue(sphere->getCharge());
@@ -709,7 +715,7 @@ int main(int argc, char* argv[])
 	icon2 = new cBitmap();
 	fileload = fileload && loadImage(icon2, "aimantpetit.png");
 	if (!fileload) { return (-1); }
-	intensiteGauge = new cGauge(font_pt, "Intensite du champ magnetique", icon1, icon2, 0.5, 5.0, 0.5, 2);
+	intensiteGauge = new cGauge(font_pt, "Intensite du champ magnetique", icon1, icon2, levelColor, 0.5, 5.0, 0.5, 2);
 	intensiteGauge->setColor(panelColor);
 	intensiteGauge->setCornerRadius(5, 5, 5, 5);
 	intensiteGauge->setValue(magnetField->getCurrentIntensity());
@@ -720,18 +726,18 @@ int main(int argc, char* argv[])
 	icon2 = new cBitmap();
 	fileload = fileload && loadImage(icon2, "transparent.png");
 	if (!fileload) { return (-1); }
-	opacityGauge = new cGauge(font_pt, "Opacite du champ magnetique", icon1, icon2, 0.0, 1.0, 0.05, 3);
+	opacityGauge = new cGauge(font_pt, "Opacite du champ magnetique", icon1, icon2, levelColor, 0.0, 1.0, 0.05, 3);
 	opacityGauge->setColor(panelColor);
 	opacityGauge->setCornerRadius(5, 5, 5, 5);
 	opacityGauge->setValue(magnetField->getTransparency());
 	pan2->addChild(opacityGauge);
 
 	icon1 = new cBitmap();
-	fileload = loadImage(icon1, "cube2.png");
+	fileload = loadImage(icon1, "2d.png");
 	icon2 = new cBitmap();
-	fileload = fileload && loadImage(icon2, "cube1.png");
+	fileload = fileload && loadImage(icon2, "3d.png");
 	if (!fileload) { return (-1); }
-	viewGauge = new cGauge(font_pt, "Point de vue de la camera", icon1, icon2, -2.0, 2.0, 0.0, 4, false, true);
+	viewGauge = new cGauge(font_pt, "Point de vue de la camera", icon1, icon2, levelColor, -2.0, 2.0, 0.0, 4, false, true);
 	viewGauge->setColor(panelColor);
 	viewGauge->setCornerRadius(5, 5, 5, 5);
 	viewGauge->setValue(1.0);
@@ -847,7 +853,9 @@ void reset()
 			score = 0;
 			cible->setLocalPos(0.00, 0.23, 0.0);
 			tirpossible = true;//gdo
+			cible->setRadius(TARGET_RADIUS);
 			bigMagnetFieldVector->setEnabled(true, true);
+			sphere->m_material->setRed();
 
 			// reinitialize parameters' values
 			sphere->setMass(SPHERE_MASS);
@@ -864,7 +872,7 @@ void reset()
 			}
 		}
 		else if (touche) {
-			cible->setLocalPos(0.00, FRAND(0.0, 0.27), FRAND(-0.15, 0.15));
+			cible->setLocalPos(0.00, FRAND(0.0, 0.24), FRAND(-0.13, 0.13));
 			touche = false;
 		}
 	}
@@ -874,6 +882,7 @@ void reset()
 		if (nbvisees == 0) {
 			cible->setLocalPos(-0.4, 0.0, 0.0);
 			tirpossible = true;//gdo
+			cible->setRadius(TARGET_RADIUS * 2);
 			bigMagnetFieldVector->setEnabled(false, true);
 
 			// prepare parameters' values for level 2
@@ -973,7 +982,7 @@ void keySelect(unsigned char key, int x, int y)
 		selection += 1;
 		if (selection > 4) { selection = 0; }
 
-		((cGauge*)pan2->getChild(selection))->setColor(panelSelectedColor);
+		((cGauge*)pan2->getChild(selection))->setColor(selectedPanelColor);
 	}
 
 	// option 0: accept/launch
@@ -981,9 +990,7 @@ void keySelect(unsigned char key, int x, int y)
 	{
 		if (tirpossible)
 		{
-			//cVector3d newVel(userVel + sphere->getSpeed() + timeInterval * sphere->getAcceleration());//grospb
-			//sphere->setSpeed(newVel);
-			sphere->setSpeed(userVel * 8);
+			sphere->setSpeed(userVel);
 			nbvisees += 1;
 
 			aimVector->setEnabled(false, true);
@@ -1001,8 +1008,14 @@ void keySelect(unsigned char key, int x, int y)
 			viewGauge->setValue(-camera->getState());
 		}
 		else {
-			if (key == '+') { ((cGauge*)pan2->getChild(selection))->incr(); }
-			else { ((cGauge*)pan2->getChild(selection))->decr(); }
+			if (key == '+') { 
+				((cGauge*)pan2->getChild(selection))->incr();
+				if (chargeGauge->getValue() > 0) { sphere->m_material->setRed(); }
+			}
+			else {
+				((cGauge*)pan2->getChild(selection))->decr();
+				if (chargeGauge->getValue() < 0) { sphere->m_material->setBlack(); }
+			}
 
 			sphere->setMass(masseGauge->getValue());
 			sphere->setCharge(chargeGauge->getValue());
@@ -1055,7 +1068,12 @@ void updateGraphics(void)
 	forceVector->setLocalPos(sphere->getLocalPos());
 	forceVector->updateArrow(sphere_force, 1.0);//3.0);
 	
-	aimVector->updateArrow(devicePos, 1.0);
+	if (mode_j == 1) {
+		aimVector->updateArrow(cVector3d(0.0, devicePos.y(), devicePos.z()), 1.0);
+	}
+	else {
+		aimVector->updateArrow(devicePos, 1.0);
+	}
 	aimXVector->updateArrow(cVector3d(devicePos.x(), 0.0, 0.0), 1.0);
 	aimYZVector->updateArrow(cVector3d(0.0, devicePos.y(), devicePos.z()), 1.0);
 
@@ -1272,29 +1290,11 @@ void updateHaptics(void)
 		spherePos = sphere->getLocalPos();
 
 		// get sphere velocity from user
-		//cVector3d userVel(userMovex, userMovey, userMovez);
-		/*
-		if (resetCount == 0 || resetCount % 10 != 0)
-			userVel = userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
-		else
-			userVel = userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
-		*/
-		//userVel = userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection();
-
-		// get sphere velocity from user
-		//userVel = cVector3d(devicePos.x()*0.001, devicePos.y()*0.001, devicePos.z()*0.001);//pb1//grospb
-		userVel = devicePos;
+		userVel = 8 * devicePos;
 		if (mode_j == 1) {
 			userVel = (userVel - userVel.dot(magnetField->getDirection()) * magnetField->getDirection());
 		}
-		/*//grospb
-		// limit the velocity maximal that the user can give to the sphere
-		if (userVel.length() > 0.0008)
-		{
-			userVel.normalize();
-			userVel *= 0.0008;
-		}
-		*/
+		
 
 		/////////////////////////////////////////////////////////////////////////
 		// UPDATE SIMULATION
@@ -1386,7 +1386,7 @@ void updateHaptics(void)
 		}*/
 
 		// check if the sphere hits the target
-		if (sphere->getLocalPos().equals(cible->getLocalPos(), TARGET_RADIUS)) {
+		if (sphere->getLocalPos().equals(cible->getLocalPos(), cible->getRadius())) {
 			touche = true;
 			score += 1;
 			if (score > highscore) {
@@ -1414,6 +1414,8 @@ void updateHaptics(void)
 	simulationFinished = true;
 }
 
+//------------------------------------------------------------------------------
+
 bool loadImage(cBitmap* a_image, const string a_filename)
 
 {
@@ -1432,5 +1434,3 @@ bool loadImage(cBitmap* a_image, const string a_filename)
 	}
 	return fileload;
 }
-
-//------------------------------------------------------------------------------

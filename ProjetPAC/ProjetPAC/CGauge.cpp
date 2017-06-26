@@ -7,6 +7,7 @@ chai3d::cGauge::cGauge(cFontPtr a_font,
 	const std::string a_text,
 	cBitmap* a_icon,
 	cBitmap* a_icon2,
+	cColorf &a_col,
 	const double a_minValue,
 	const double a_maxValue,
 	double a_step,
@@ -28,6 +29,8 @@ chai3d::cGauge::cGauge(cFontPtr a_font,
 	this->m_double = a_double;
 	// wether or not the gauge is actually a toggle switch
 	this->m_toggle = a_toggle;
+	// color of the active part of the gauge
+	this->m_col = a_col;
 
 	// add a description text as a child
 	cLabel* text = new cLabel(a_font);
@@ -143,6 +146,7 @@ void chai3d::cGauge::update(const double a_frameWidth,
 	{
 	//
 	cLevel* lvl = (cLevel*)getChild(3);
+	lvl->m_colorActive = m_col;
 
 	// set positions of the icons children
 	ico->setLocalPos(a_frameWidth - frameMarge - iconWidth + 5, 30 - iconWidth / 2);
@@ -172,6 +176,7 @@ void chai3d::cGauge::update(const double a_frameWidth,
 		lvl_2->setLocalPos(a_frameWidth / 2 - 1, gaugeHeight - 20 - 2 * levelHeight);
 		lvl_2->setNumIncrements(levelNumIncrements);
 		lvl_2->setValue(cMax(0.0, -m_value));
+		lvl_2->m_colorActive = m_col;
 	}
 	//
 	}

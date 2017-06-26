@@ -13,7 +13,7 @@ namespace chai3d {
 
 		cConsol(double a_width,
 			double a_height,
-			const cColorf &a_colBg,
+			const cColorf &a_txtCol,
 			cFontPtr a_fontLbl,
 			cFontPtr a_fontVal,
 			const std::string a_textLbl,

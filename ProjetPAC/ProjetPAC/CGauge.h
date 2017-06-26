@@ -16,6 +16,7 @@ namespace chai3d {
 			const std::string a_text,
 			cBitmap* a_icon,
 			cBitmap* a_icon2,
+			cColorf &a_col,
 			const double a_minValue,
 			const double a_maxValue,
 			const double a_step,
@@ -42,6 +43,7 @@ namespace chai3d {
 		double m_step;
 		bool m_double;
 		bool m_toggle;
+		cColorf m_col;
 
 	};
 
