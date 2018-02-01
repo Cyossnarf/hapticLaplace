@@ -10,7 +10,7 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 {
 	// set properties of the field
 	this->fieldEnabled = true;
-	this->direction = cVector3d(0.0, 0.0, 1.0);
+	this->direction = cVector3d(1.0, 0.0, 0.0);
 	this->radial = cVector3d(0.0, 1.0, 0.0);
 	this->intensity = intensity;
 	this->innerRadius = in_radius;
@@ -55,6 +55,14 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 	tube->setLocalPos(currentPos);
 	*/
 
+	// accelerator torus
+	cMesh* ring = new cMesh();
+	this->addChild(ring);
+	cCreateRing(ring, 0.12, 0.6);
+	ring->setLocalPos(0, 0.6, 0.2);
+	ring->rotateAboutLocalAxisRad(cVector3d(0.0, 1.0, 0.0), C_PI_DIV_2);
+	ring->setTransparencyLevel(0.5);
+
 	// disable haptic effects
 	setHapticEnabled(false);
 
@@ -62,8 +70,8 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 	setTransparency(1);
 
 	// set the orientation of the field
-	rotateAround(cVector3d(0.0, 1.0, 0.0), C_PI_DIV_2);// -C_PI_DIV_2*0.8);
-	//rotateAround(cVector3d(0.0, 0.0, 1.0), C_PI_DIV_2 / 8);
+	rotateAboutGlobalAxisRad(cVector3d(0.0, 1.0, 0.0), C_PI_DIV_2);
+	//rotateAround(cVector3d(0.0, 1.0, 0.0), C_PI_DIV_2);
 }
 
 chai3d::cMagnetField::~cMagnetField()
@@ -72,7 +80,7 @@ chai3d::cMagnetField::~cMagnetField()
 }
 
 
-void chai3d::cMagnetField::rotateAround(cVector3d &rotationAxis, double rotation)
+/*void chai3d::cMagnetField::rotateAround(cVector3d &rotationAxis, double rotation)
 
 {
 	// compute the new direction of the field
@@ -84,7 +92,7 @@ void chai3d::cMagnetField::rotateAround(cVector3d &rotationAxis, double rotation
 	
 	// rotate
 	rotateAboutGlobalAxisRad(rotationAxis, rotation);
-}
+}*/
 
 
 bool chai3d::cMagnetField::contain(const cGenericObject &obj) const

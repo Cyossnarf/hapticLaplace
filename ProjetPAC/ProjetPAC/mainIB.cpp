@@ -372,9 +372,10 @@ int main(int argc, char* argv[])
 
 	cout << endl;
 	cout << "-----------------------------------" << endl;
-	cout << "CHAI3D" << endl;
-	cout << "Copyright 2003-2015" << endl;
-	cout << "Haptic Laplace / MAGNETICA STRIKE" << endl;
+	cout << " Haptic Laplace / MAGNETICA STRIKE" << endl;
+	cout << "     -------------------------" << endl;
+	cout << " Ilias Benjelloun    Mathilde Jean" << endl;
+	cout << " François Buet       Amédée Corda" << endl;
 	cout << "-----------------------------------" << endl << endl << endl;
 	cout << "Keyboard Options:" << endl << endl;
 	cout << "[0] - accept/launch" << endl;
@@ -976,8 +977,8 @@ void keySelect(unsigned char key, int x, int y)
 	if (key == 'r') { reset(); }
 
 	// option c: start camera movement
-	if (key == 'c') { camera->setInMovement(); }
-
+	if (key == 'c') { camera->set(cVector3d(1, 0.6, 1), cVector3d(0.0, 0.6, 0.0), cVector3d(0.0, 0.0, 1.0)); }//{ camera->setInMovement(); }
+	
 	// option 2: shift selection to the next parameter
 	if (key == '2')
 	{
@@ -1141,14 +1142,14 @@ void updateGraphics(void)
 		pan1->setLocalPos(windowW * 0.05, windowH * 0.05);
 		pan2->setLocalPos(windowW * 0.775, 0.0);
 		pan3->setLocalPos(windowW * 0.4 - 265, windowH * 0.05 - 40);
-
-		// update positions and dimensions of gauges
-		masseGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
-		chargeGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
-		intensiteGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
-		opacityGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
-		viewGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
 	}
+
+	// update positions and dimensions of gauges
+	masseGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
+	chargeGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
+	intensiteGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
+	opacityGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
+	viewGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
 
 	// update values displayed by consols
 	levelCon->update(cStr(mode_j));

@@ -16,7 +16,7 @@ namespace chai3d {
 		cMagnetField(const cVector3d &pos = cVector3d(0.0, 0.0, 0.0), double in_radius = 0.12, double out_radius = 0.13, double intensity = 0.5, double len = 0.4);
 		~cMagnetField();
 		
-		void rotateAround(cVector3d &rotationAxis, double rotation);
+		//void rotateAround(cVector3d &rotationAxis, double rotation);
 
 		bool contain(const cGenericObject &obj) const;
 
