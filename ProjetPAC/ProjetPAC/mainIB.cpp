@@ -234,6 +234,9 @@ int windowH;
 int windowPosX;
 int windowPosY;
 
+// indicates if the window has been resized since last display
+bool windowResize = false;
+
 // information about the ATB bar
 int barSizeW;
 int barSizeH;
@@ -439,7 +442,7 @@ int main(int argc, char* argv[])
 	}
 
 	// initialize AntTweakBar
-	TwInit(TW_OPENGL, NULL);
+	TwInit(TW_OPENGL_CORE, NULL);
 
 	// telling AntTweakBar the size of the graphic window
 	TwWindowSize(windowW, windowH);
@@ -600,7 +603,7 @@ int main(int argc, char* argv[])
 	TwAddVarRW(bar1, "Champ magnétique", TW_TYPE_DIR3F, &MAGN_FIELD, " opened=true showval=false arrowcolor='52 74 255' ");
 	TwAddVarRW(bar1, "Vitesse", TW_TYPE_DIR3F, &SPHERE_SPEED, " opened=true showval=false arrowcolor='133 245 0' ");
 	TwAddVarRW(bar1, "Force magnétique", TW_TYPE_DIR3F, &SPHERE_FORCE, " opened=true showval=false arrowcolor='243 0 86' ");
-
+	
 	//--------------------------------------------------------------------------
 	// WIDGETS
 	//--------------------------------------------------------------------------
@@ -835,6 +838,7 @@ void resizeWindow(int w, int h)
 {
 	windowW = w;
 	windowH = h;
+	windowResize = true;
 }
 
 //------------------------------------------------------------------------------
@@ -1122,33 +1126,35 @@ void updateGraphics(void)
 	//cStr(sphere_force.length())//cStr(atan2(-devicePos.x(), devicePos.y()))
 	//devicePos.str()+" "+userVel.str()
 
-	// update position of info label
-	labelInfo->setLocalPos(15, windowH - 25);
-	// update position of message label
-	labelMessage->setLocalPos(0.5 * (0.75 * windowW - labelMessage->getWidth()), 0.925 * windowH - 40);
+	if (windowResize) {
+		// update position of info label
+		labelInfo->setLocalPos(15, windowH - 25);
+		// update position of message label
+		labelMessage->setLocalPos(0.5 * (0.75 * windowW - labelMessage->getWidth()), 0.925 * windowH - 40);
 
-	// set width and height of panels
-	pan1->setSize(windowW * 0.7, windowH * 0.8);
-	pan1->setCornerRadius(0, windowH * 0.1, windowH * 0.1, 0);
-	pan2->setSize(windowW * 0.2, windowH);
+		// set width and height of panels
+		pan1->setSize(windowW * 0.7, windowH * 0.8);
+		pan1->setCornerRadius(0, windowH * 0.1, windowH * 0.1, 0);
+		pan2->setSize(windowW * 0.2, windowH);
 
-	// assign a position (x,y) to panels
-	pan1->setLocalPos(windowW * 0.05, windowH * 0.05);
-	pan2->setLocalPos(windowW * 0.775, 0.0);
-	pan3->setLocalPos(windowW * 0.4 - 265, windowH * 0.05 - 40);
+		// assign a position (x,y) to panels
+		pan1->setLocalPos(windowW * 0.05, windowH * 0.05);
+		pan2->setLocalPos(windowW * 0.775, 0.0);
+		pan3->setLocalPos(windowW * 0.4 - 265, windowH * 0.05 - 40);
+
+		// update positions and dimensions of gauges
+		masseGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
+		chargeGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
+		intensiteGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
+		opacityGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
+		viewGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
+	}
 
 	// update values displayed by consols
 	levelCon->update(cStr(mode_j));
 	scoreCon->update(cStr(score));
 	highscoreCon->update(cStr(highscore));
 	launchCon->update(cStr(LAUNCH_NUMBER - nbvisees));
-
-	// update positions and dimensions of gauges
-	masseGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
-	chargeGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
-	intensiteGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
-	opacityGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
-	viewGauge->update(windowW * 0.2, windowH, windowH * 0.35, 5);
 	
 	/////////////////////////////////////////////////////////////////////
 	// RENDER SCENE
@@ -1165,19 +1171,22 @@ void updateGraphics(void)
 		windowW,
 		windowH);
 
-	// telling AntTweakBar the size of the graphic window
-	TwWindowSize(windowW, windowH);
+	if (windowResize) {
+		// telling AntTweakBar the size of the graphic window
+		TwWindowSize(windowW, windowH);
 
+		// update position and dimension of the bar
+		barPosX = (int)(windowW*0.775);
+		barPosY = (int)(windowH*0.65);
+		barSizeW = (int)(windowW*0.2);
+		barSizeH = (int)(windowH*0.35);
+		barPos = to_string(barPosX) + " " + to_string(barPosY);
+		barSize = to_string(barSizeW) + " " + to_string(barSizeH);
+		barDef = " Bonjour position='" + barPos + "' size='" + barSize + "'";
+		const char *pbarDef = barDef.c_str();
+		TwDefine(pbarDef);
+	}
 	// display bars
-	barPosX = (int)(windowW*0.775);
-	barPosY = (int)(windowH*0.65);
-	barSizeW = (int)(windowW*0.2);
-	barSizeH = (int)(windowH*0.35);
-	barPos = to_string(barPosX)+" "+ to_string(barPosY);
-	barSize = to_string(barSizeW) + " " + to_string(barSizeH);
-	barDef = " Bonjour position='" + barPos + "' size='" + barSize+"'";
-	const char *pbarDef = barDef.c_str();
-	TwDefine(pbarDef);
 	TwDraw();
 
 	// swap buffers
@@ -1185,6 +1194,8 @@ void updateGraphics(void)
 
 	// wait until all GL commands are completed
 	glFinish();
+
+	windowResize = false;
 
 	// check for any OpenGL errors
 	GLenum err = glGetError();
