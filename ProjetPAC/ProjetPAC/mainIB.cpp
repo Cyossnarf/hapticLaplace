@@ -568,6 +568,7 @@ int main(int argc, char* argv[])
 	magnetField->setLocalPos(-magnetField->getLength(), 0.0, 0.0);
 	// set color of the magnetic field
 	magnetField->m_material->setColor(magneticFieldColor);
+	((cMesh*)magnetField->getChild(0))->m_material->setColor(magneticFieldColor);
 
 	// create arrows
 	bigMagnetFieldVector = new cArrow(cVector3d(-0.35, 0.0, 0.0), fieldArrowColor, 0.01, 0.02, 0.3);
@@ -847,7 +848,7 @@ void resizeWindow(int w, int h)
 void reset()
 {
 	if (nbvisees == LAUNCH_NUMBER) {
-		mode_j = 3 - mode_j;
+		mode_j = mode_j % 3 + 1;
 		nbvisees = 0;
 	}
 
@@ -861,6 +862,7 @@ void reset()
 			cible->setRadius(TARGET_RADIUS);
 			bigMagnetFieldVector->setEnabled(true, true);
 			sphere->m_material->setRed();
+			magnetField->getChild(0)->setEnabled(false);
 
 			// reinitialize parameters' values
 			sphere->setMass(SPHERE_MASS);
@@ -871,8 +873,8 @@ void reset()
 			intensiteGauge->setValue(CURRENT_INTENSITY);
 			magnetField->setTransparency(1.0);
 			opacityGauge->setValue(1.0);
-			if (camera->getState() == -1) {
-				camera->setInMovement();
+			if (camera->getSense2() == -1) {
+				camera->setInMovement(2);
 				viewGauge->setValue(1);
 			}
 		}
@@ -895,7 +897,7 @@ void reset()
 				magnetField->setTransparency(0.5);
 				opacityGauge->setValue(0.5);
 			}
-			if (camera->getState() == 1) {
+			if (camera->getSense() == 1) {
 				camera->setInMovement();
 				viewGauge->setValue(-1);
 			}
@@ -912,6 +914,15 @@ void reset()
 		aimYZVector->setEnabled(true, true);
 		aimYZVector->setEnabled(false);
 		aimYZVector->setLocalPos(posref);
+	}
+	else if (mode_j == 3) {
+		if (nbvisees == 0) {
+			magnetField->getChild(0)->setEnabled(true);
+			camera->setInMovement(2);
+		}
+		else {
+			nbvisees = LAUNCH_NUMBER;
+		}
 	}
 
 	sphere->setLocalPos(posref);
@@ -977,7 +988,7 @@ void keySelect(unsigned char key, int x, int y)
 	if (key == 'r') { reset(); }
 
 	// option c: start camera movement
-	if (key == 'c') { camera->set(cVector3d(1, 0.6, 1), cVector3d(0.0, 0.6, 0.0), cVector3d(0.0, 0.0, 1.0)); }//{ camera->setInMovement(); }
+	if (key == 'c') { camera->setInMovement(2); }//{ camera->setInMovement(); }
 	
 	// option 2: shift selection to the next parameter
 	if (key == '2')
@@ -1010,7 +1021,7 @@ void keySelect(unsigned char key, int x, int y)
 		//printf("Salut,");//debug
 		if (selection == 4) {
 			camera->setInMovement();
-			viewGauge->setValue(-camera->getState());
+			viewGauge->setValue(-camera->getSense());
 		}
 		else {
 			if (key == '+') { 
@@ -1086,9 +1097,14 @@ void updateGraphics(void)
 	if (camera->isInMovement())
 	{
 		camera->moveCam();
+
+		if (camera->isInMovement() == 2) {
+			magnetField->setTransparency(0.5 - camera->getStep2() * 0.01);
+			((cMesh*)magnetField->getChild(0))->setTransparencyLevel(camera->getStep2() * 0.01);
+		}
 	}
 
-	if (camera->isInMovement() || camera->getState() != 1)
+	if (camera->isInMovement() == 1 || camera->getSense() != 1)
 	{
 		// z-axis-rotate the GUI vectors, so they match the camera's new point of view
 		sphere_force = camera->getRotation() * sphere_force;

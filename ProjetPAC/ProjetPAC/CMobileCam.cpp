@@ -23,35 +23,80 @@ chai3d::cMobileCam::cMobileCam(cWorld* world, const cVector3d &eye, const cVecto
 {
 	this->set(eye, target, up);
 	this->rotation.identity();
-	this->inMovement = false;
+	this->inMovement = 0;
 	this->step = 0;
-	this->state = 1;
+	this->sense = 1;
+	this->step2 = 0;
+	this->sense2 = 1;
+	this->pos0 = eye;
+	this->lookatPos0 = target;
+	this->pos2 = cVector3d(1, 0.6, 1);
+	this->lookatPos2 = cVector3d(0.0, 0.6, 0.0);
+}
+
+void chai3d::cMobileCam::setInMovement(const int a_mvtType)
+
+{
+	inMovement = a_mvtType;
+
+	if (a_mvtType == 2)// useful for the changing scale movement only
+	{
+		if (sense2 == 1) {// dans le sens aller (dezoom) on part de la position courante
+			pos1 = getLocalPos();
+			lookatPos1 = getLookVector();
+			rotation.identity();
+		}
+		else {// au retour (zoom) on revient à la position intiale
+			pos1 = pos0;
+			lookatPos1 = lookatPos0;
+			step = 0;
+			sense = 1;
+		}
+	}
 }
 
 void chai3d::cMobileCam::moveCam()
 
 {
-	if (this->step == 30 * (this->state + 1) / 2)//dans le sens aller on s'arrete pour step==30, dans le sens retour pour step==0
+	if (this->inMovement == 2)// changing scale movement
 	{
-		this->inMovement = false;
-		this->state *= -1;
+		if (this->step2 == 50 * (this->sense2 + 1) / 2)// dans le sens aller on s'arrete pour step2==50, dans le sens retour pour step2==0
+		{
+			this->inMovement = 0;
+			this->sense2 *= -1;
+		}
+		else
+		{
+			this->step2 += this->sense2;
+			this->set((pos1 * (50 - step2) + pos2 * step2) / 50,	// camera position (eye)
+				(lookatPos1 * (50 - step2) + lookatPos2 * step2) / 50,	// lookat position (target)
+				cVector3d(0.0, 0.0, 1.0));   // direction of the (up) vector
+		}
 	}
-	else
+	else// turning around movement
 	{
-		this->step += this->state;
-		double alpha = this->step * C_PI / (30 * 4);
-		// position and orient the camera
-		this->set(cVector3d(0.4*cCosRad(alpha), 0.4*cSinRad(alpha), step * 0.15 / 30),	// camera position (eye)
-			cVector3d(-step * 0.1 / 30, 0.0, 0.0),	// lookat position (target)
-			cVector3d(0.0, 0.0, 1.0));   // direction of the (up) vector
+		if (this->step == 30 * (this->sense + 1) / 2)//dans le sens aller on s'arrete pour step==30, dans le sens retour pour step==0
+		{
+			this->inMovement = 0;
+			this->sense *= -1;
+		}
+		else
+		{
+			this->step += this->sense;
+			double alpha = this->step * C_PI / (30 * 4);
+			// position and orient the camera
+			this->set(cVector3d(0.4*cCosRad(alpha), 0.4*cSinRad(alpha), step * 0.15 / 30),	// camera position (eye)
+				cVector3d(-step * 0.1 / 30, 0.0, 0.0),	// lookat position (target)
+				cVector3d(0.0, 0.0, 1.0));   // direction of the (up) vector
 
-		// on calcule la matrice rotation pour orienter correctement les vecteurs dans la barre
-		const double beta = cAngle(cVector3d(1.0, 0.0, 0.0), cVector3d(0.4*cCosRad(alpha) + step*0.1/30, 0.4*cSinRad(alpha), 0.0));
-		this->rotation = cMatrix3d(0.0, 0.0, 1.0, -beta);
-		//printf((cStr(beta)+"\n").c_str());//debug
-		//printf((this->rotation.str()+"\n").c_str());//debug
+			// on calcule la matrice rotation pour orienter correctement les vecteurs dans la barre
+			const double beta = cAngle(cVector3d(1.0, 0.0, 0.0), cVector3d(0.4*cCosRad(alpha) + step*0.1 / 30, 0.4*cSinRad(alpha), 0.0));
+			this->rotation = cMatrix3d(0.0, 0.0, 1.0, -beta);
+			//printf((cStr(beta)+"\n").c_str());//debug
+			//printf((this->rotation.str()+"\n").c_str());//debug
+		}
 	}
-	
+
 }
 
 // On a reproduit la fonction renderView pour pouvoir afficher

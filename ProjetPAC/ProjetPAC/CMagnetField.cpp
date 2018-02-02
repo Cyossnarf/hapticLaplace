@@ -61,7 +61,8 @@ chai3d::cMagnetField::cMagnetField(const cVector3d &pos, double in_radius, doubl
 	cCreateRing(ring, 0.12, 0.6);
 	ring->setLocalPos(0, 0.6, 0.2);
 	ring->rotateAboutLocalAxisRad(cVector3d(0.0, 1.0, 0.0), C_PI_DIV_2);
-	ring->setTransparencyLevel(0.5);
+	ring->setTransparencyLevel(0);
+	ring->setEnabled(false);
 
 	// disable haptic effects
 	setHapticEnabled(false);
@@ -168,4 +169,11 @@ void chai3d::cMagnetField::setTransparency(const double value)
 {
 	transparency = std::max(0.0, std::min(1.0, value));
 	setTransparencyLevel(transparency);
+}
+
+void chai3d::cMagnetField::setTorusTransparency(const double value)
+
+{
+	transparency = std::max(0.0, std::min(1.0, value));
+	getChild(0)->setTransparencyLevel(transparency);
 }

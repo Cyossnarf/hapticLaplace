@@ -34,6 +34,8 @@ namespace chai3d {
 
 		inline double getTransparency() const { return transparency; }
 		void setTransparency(double value);
+
+		void setTorusTransparency(double value);
 		
 		void activate(bool active) { fieldEnabled = active; }
 
